@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excess sheet management program</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<style>
+:root{--bg:#0f172a;--card:#1f2937;--line:#52627a;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--orange:#f97316;--gray:#4b5563;--yellow:#eab308;--purple:#6d28d9}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Tahoma,sans-serif;background:radial-gradient(circle at 20% 10%,rgba(37,99,235,.22),transparent 28%),linear-gradient(135deg,#08111f,#0f172a 45%,#111827);color:#fff}
+.wrap{max-width:1240px;margin:auto;padding:14px}
+.top{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;padding:14px 18px;margin-bottom:16px;border:1px solid rgba(96,165,250,.35);border-radius:18px;background:radial-gradient(circle at 18% 20%,rgba(59,130,246,.28),transparent 32%),linear-gradient(135deg,rgba(15,23,42,.98),rgba(30,41,59,.92));box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.title{position:relative;display:inline-block;max-width:820px;font-size:28px;font-weight:900;line-height:1.28;letter-spacing:.2px;color:#fff;text-shadow:0 0 8px rgba(59,130,246,.75),0 2px 0 rgba(0,0,0,.65);overflow:hidden;white-space:normal;word-break:keep-all;overflow-wrap:normal}
+.title .mainTitle,.title .subTitleThai{display:block}
+.title .subTitleThai{color:#e0f2fe}
+.title::after{content:"";position:absolute;top:0;left:-130%;width:65%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.9),rgba(250,204,21,.62),transparent);transform:skewX(-22deg);animation:titleShine 4.5s infinite}
+@keyframes titleShine{0%{left:-130%}45%{left:135%}100%{left:135%}}
+.titleSub{font-size:14px;color:#bfdbfe;margin-top:8px;font-weight:900;letter-spacing:.2px}
+#userInfo{min-width:260px;text-align:right;color:#fff;font-size:14px;font-weight:900;line-height:1.35;padding:8px 10px;border-radius:12px;background:rgba(15,23,42,.52);border:1px solid rgba(148,163,184,.25)}
+.card{background:rgba(31,41,55,.96);border:1px solid #475569;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 16px 35px rgba(0,0,0,.25)}
+label{display:block;margin-top:12px;margin-bottom:7px;font-size:18px;font-weight:900;color:#fff}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f172a;color:#fff;font-size:16px}
+select{width:100%;height:52px;background:linear-gradient(180deg,#071633,#08111f);border:2px solid #3b82f6;border-radius:12px;color:#fff;font-size:20px;font-weight:800;padding:0 18px;outline:none;box-shadow:0 0 0 1px rgba(59,130,246,.25),0 0 18px rgba(59,130,246,.18)}
+select:focus{border-color:#facc15;box-shadow:0 0 0 2px rgba(250,204,21,.35),0 0 30px rgba(250,204,21,.25)}
+select option{background:#0b1220;color:#fff;font-size:18px;font-weight:700}
+input[type="date"]{max-width:320px;background:#07122a;border:2px solid #60a5fa;box-shadow:0 0 0 2px rgba(96,165,250,.2)}
+input[type="date"]::-webkit-calendar-picker-indicator{background-color:#fff;padding:8px;border-radius:8px;cursor:pointer;opacity:1}
+input[type=number]{background:#0b1222;border:2px solid #e5e7eb}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:1;width:26px;height:34px;filter:invert(1)}
+.formRow{display:flex;gap:14px;align-items:end;flex-wrap:wrap}
+.formField{min-width:220px;max-width:340px;flex:0 0 auto}
+.btn{border:0;border-radius:12px;padding:12px 18px;margin:8px 4px 0 0;color:#fff;font-weight:900;font-size:16px;cursor:pointer}
+.btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btnMini{padding:8px 12px;font-size:13px;border-radius:9px}
+.blue{background:var(--blue)}.green{background:var(--green)}.red{background:var(--red)}.orange{background:var(--orange)}.gray{background:var(--gray)}.yellow{background:var(--yellow);color:#111}.purple{background:var(--purple)}
+.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.menuBtn{height:92px;border-radius:18px;border:1px solid #334155;background:#273449;color:#fff;font-size:16px;font-weight:900;cursor:pointer;position:relative;overflow:hidden;transition:.25s}
+.menuBtn small{display:block;color:#cbd5e1;margin-top:6px}
+.menuBtn::before{content:"";position:absolute;top:0;left:-120%;width:70%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.55),rgba(96,165,250,.35),transparent);transform:skewX(-22deg);transition:.55s}
+.menuBtn:hover{border-color:#60a5fa;background:linear-gradient(135deg,#1d4ed8,#273449 65%);box-shadow:0 0 28px rgba(96,165,250,.38)}
+.menuBtn:hover::before{left:130%}
+.msg{white-space:pre-line;margin-top:10px;font-weight:900}.ok{color:#bbf7d0}.danger{color:#fecaca}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #52627a;padding:9px}
+th{background:#0f172a}
+tfoot td,.totalRow td{background:#111827!important;color:#facc15!important;font-weight:900!important}
+.infoBox{margin-top:12px;padding:14px;border-radius:12px;background:#0f172a;border:1px solid #475569;font-weight:900}
+.bigKg{font-size:32px;color:#22c55e;font-weight:900}.bigUse{font-size:28px;color:#facc15;font-weight:900}
+.alertBox{background:#8b1a1a;border:1px solid #ef4444;border-radius:12px;padding:12px;margin-bottom:10px;font-weight:900;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.autoBox{position:relative}.autoList{position:absolute;z-index:50;background:#111827;border:1px solid #475569;border-radius:10px;width:100%;max-height:260px;overflow:auto}
+.autoItem{padding:10px;cursor:pointer;border-bottom:1px solid #334155}.autoItem:hover{background:#2563eb}
+.loginSuggestSide{position:absolute;left:calc(100% + 12px);top:0;width:430px;max-height:360px;overflow:auto;background:linear-gradient(180deg,#111827,#0f172a);border:1px solid #60a5fa;border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.45);padding:8px;z-index:80}
+.loginSuggestSide .autoItem{border-radius:10px;margin-bottom:6px;background:#1f2937}
+.loginSuggestSide .autoItem:hover{background:#2563eb;color:#fff}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:99}
+.modal{background:#111827;border:1px solid #475569;border-radius:18px;max-width:560px;width:90%;padding:18px}
+.searchMini{margin-top:12px;padding:14px;border:1px dashed #64748b;border-radius:12px;background:#111827}
+#readerUse,#readerIssue{max-width:360px;margin-top:12px;background:#fff;color:#111;border-radius:12px;overflow:hidden}
+.kgGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
+.kgItem{padding:10px;background:#111827;border:1px solid #475569;border-radius:12px}
+.printControl{background:#111827;border:1px dashed #64748b;border-radius:12px;padding:12px;margin-top:14px}
+.printSelectLine{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.printSelectLine input{width:auto}
+.reportTitle{padding:12px 16px;border-radius:12px;font-size:26px;font-weight:900;margin-top:24px;margin-bottom:8px}
+.reportBlue{background:#2563eb}.reportOrange{background:#ea580c}.reportGreen{background:#16a34a}.reportPurple{background:#6d28d9}
+.reportBox{border-radius:14px;padding:10px;margin-top:8px;overflow:auto}
+.boxBlue table th{background:#1d4ed8}.boxOrange table th{background:#c2410c}.boxGreen table th{background:#15803d}.boxPurple table th{background:#581c87}
+canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-height:380px}
+.labelBox{background:#fff;color:#111;width:105mm;min-height:145mm;border:3px solid #111;text-align:center;padding:8mm;margin:16px auto;page-break-after:always}
+.labelTypeText{font-size:25px;font-weight:900;margin-top:6px}.labelTypeValue{font-size:42px;font-weight:900;line-height:1.05}
+.labelKgTitle{font-size:22px;font-weight:900;margin-top:8px}.labelKgValue{font-size:54px;font-weight:900;line-height:1}
+.labelBox img{width:48mm;height:48mm;margin-top:6px}.pid{font-size:31px;font-weight:900;margin-top:6px}
+.labelMeta{font-size:17px;font-weight:800;margin-top:4px}.labelMetaSmall{font-size:14px;font-weight:700;margin-top:3px}
+.customerLabelTitle{font-size:30px;font-weight:900;margin-bottom:4px}.customerName{font-size:23px;font-weight:900;line-height:1.15;margin:4px 0}
+.labelDetail{font-size:15px;font-weight:800;margin-top:3px}
+.customerLabel .customerQtyLine{font-size:20px;font-weight:900;margin:7px 0;color:#111}
+.customerLabel .customerOrderLine{font-size:17px;font-weight:900;margin:4px 0;color:#111}
+.customerLabel .labelDetail{font-size:16px;font-weight:800}
+.customerLabel .customerName{font-size:24px}
+.loadingBox{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:999;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-weight:900;font-size:20px}
+.spinner{width:70px;height:70px;border:7px solid rgba(255,255,255,.25);border-top:7px solid #60a5fa;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loadingSub{font-size:14px;color:#bfdbfe;margin-top:6px}
+@page{size:A4 portrait;margin:0}
+@media print{
+body *{visibility:hidden}
+#printArea,#printArea *,#printAreaUse,#printAreaUse *,#printAreaReprint,#printAreaReprint *{visibility:visible}
+#printArea,#printAreaUse,#printAreaReprint{position:absolute;left:0;top:0;width:210mm;background:#fff}
+#labelPreview,#labelPreviewUse,#labelPreviewReprint{width:210mm;display:block;padding-top:80mm;overflow:visible}
+.labelBox{width:150mm;min-height:145mm;margin:0 auto 20mm auto;padding:8mm;border:3px solid #111}
+.customerLabel{min-height:165mm;margin-bottom:12mm}
+.labelBox img{width:46mm;height:46mm}.pid{font-size:34px}.labelKgValue{font-size:62px}
+.customerLabel .customerQtyLine{font-size:21px}
+.noPrint{display:none!important}
+}
+@media(max-width:720px){
+.top{grid-template-columns:1fr;padding:12px}.title{max-width:100%;font-size:21px;line-height:1.32}#userInfo{min-width:0;width:100%;text-align:left;font-size:13px}.card{padding:12px}.formField{min-width:100%;max-width:100%}
+.loginSuggestSide{position:static;width:100%;margin-top:8px}
+}
+</style>
+</head>
+
+<body>
+<div id="loadingBox" class="loadingBox">
+  <div class="spinner"></div>
+  <div id="loadingText">กำลังทำงาน กรุณารอสักครู่...</div>
+  <div class="loadingSub">โปรดอย่ากดซ้ำจนกว่าระบบจะแสดงผล</div>
+</div>
+
+<div class="wrap">
+<div class="top">
+  <div>
+    <div class="title">
+      <span class="mainTitle">Excess sheet management program</span>
+      <span class="subTitleThai">(โปรแกรมจัดการ SHEET เกิน)</span>
+    </div>
+    <div class="titleSub">ระบบจัดการพาเลท WI / ใช้จริง / คงเหลือ / Stock Alert</div>
+  </div>
+  <div id="userInfo">ยังไม่ได้เข้าสู่ระบบ</div>
+</div>
+
+<div id="loginView" class="card">
+  <h2>เข้าสู่ระบบ</h2>
+  <label>Username</label>
+  <div class="autoBox">
+    <input id="loginUser" placeholder="พิมพ์บางส่วน เช่น peer / som" onfocus="showAllUsers()" oninput="suggestUsersRealtime()" autocomplete="off">
+    <div id="loginSuggest" class="autoList loginSuggestSide hidden"></div>
+  </div>
+  <label>Password</label>
+  <input id="loginPass" type="password">
+  <button class="btn blue" onclick="login()">เข้าสู่ระบบ</button>
+  <button class="btn gray" onclick="clearLoginForm()">ล้างข้อมูล</button>
+  <div id="loginMsg" class="msg"></div>
+</div>
+
+<div id="mainView" class="hidden">
+  <div id="alertArea"></div>
+  <div class="card">
+    <h2>เมนูหลัก</h2>
+    <div class="grid">
+      <button class="menuBtn" onclick="showView('createView')">สร้างพาเลท<small>สร้าง QR / หลายพาเลท / CANCEL</small></button>
+      <button class="menuBtn" onclick="showView('issueView')">เบิก / ย้าย<small>SCAN / เลือกหลายพาเลท</small></button>
+      <button class="menuBtn" onclick="showView('useView')">ใช้จริง / WI<small>สแกน / ค้นหา / ชั่งเหลือ</small></button>
+      <button class="menuBtn" onclick="showView('reprintView')">พิมพ์ป้ายซ้ำ<small>กรณีป้ายหาย</small></button>
+      <button id="adminMenuBtn" class="menuBtn" onclick="showView('adminView')">ตั้งค่า<small>Admin</small></button>
+      <button class="menuBtn" onclick="showView('reportView')">Report<small>รายงาน</small></button>
+      <button class="menuBtn" onclick="location.reload()">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+
+<div id="createView" class="card hidden subview">
+  <h2>สร้างพาเลท</h2>
+  <div class="infoBox">ผู้สร้าง: <span id="createLoginName" class="bigUse"></span></div>
+
+  <div id="adminCreateDateBox" class="hidden">
+    <label>วันที่สร้างป้ายสำหรับ ADMIN</label>
+    <input id="createDateAdmin" type="date">
+  </div>
+
+  <label>ประเภทงาน</label>
+  <select id="createType" onchange="onCreateTypeChange()"></select>
+
+  <div id="customerForm" class="searchMini hidden">
+    <h3>ข้อมูลแผ่นงานลูกค้า</h3>
+
+    <div class="formRow">
+      <div class="formField">
+        <label>PC</label>
+        <div class="autoBox">
+          <input id="pc" placeholder="พิมพ์ PC บางส่วน" oninput="suggestCustomerJobsRealtime('pc')" autocomplete="off">
+          <div id="jobSuggestPc" class="autoList hidden"></div>
+        </div>
+      </div>
+      <div class="formField">
+        <label>Material_No</label>
+        <div class="autoBox">
+          <input id="materialNo" placeholder="พิมพ์ Material บางส่วน" oninput="suggestCustomerJobsRealtime('materialNo')" autocomplete="off">
+          <div id="jobSuggestMat" class="autoList hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <label>Cust_Name <span style="color:#facc15">(บังคับ)</span></label>
+    <input id="custName" placeholder="ดึง AUTO จาก PC/Material หรือกรอกเอง">
+
+    <div class="formRow">
+      <div class="formField"><label>Box_Type</label><input id="boxType"></div>
+      <div class="formField"><label>CutSheetWid</label><input id="cutSheetWid" type="number"></div>
+      <div class="formField"><label>CutSheetLeng</label><input id="cutSheetLeng" type="number"></div>
+    </div>
+
+    <div class="formRow">
+      <div class="formField"><label>Flute</label><select id="flute"><option value="">-- เลือกลอน --</option><option>A</option><option>B</option><option>BC</option></select></div>
+      <div class="formField"><label>Board</label><input id="board"></div>
+      <div class="formField"><label>Weight_Box <span style="color:#facc15">(บังคับ)</span></label><input id="weightBox" type="number" step="0.0001" oninput="autoCalcCustomerPallets()"></div>
+    </div>
+
+    <div class="formRow">
+      <div class="formField"><label>เลขที่ S/O</label><input id="soNo" placeholder="SO-xxxx"></div>
+      <div class="formField"><label>ORDER <span style="color:#facc15">(บังคับ)</span></label><input id="orderQty" type="number" oninput="autoCalcCustomerPallets()"></div>
+      <div class="formField"><label>หน่วย ORDER</label><select id="orderUnit"><option>กล่อง</option><option>แผ่น</option></select></div>
+    </div>
+  </div>
+
+  <label>จำนวนพาเลทที่ต้องการสร้าง</label>
+  <input id="createPalletCount" type="number" min="1" max="50" value="1" oninput="renderKgInputs()">
+
+  <label>น้ำหนัก KG / จำนวนต่อพาเลท</label>
+  <div id="kgInputArea" class="kgGrid"></div>
+
+  <label>แผนกผู้สร้าง</label>
+  <select id="createDept"></select>
+
+  <label>หมายเหตุ</label>
+  <textarea id="createRemark"></textarea>
+
+  <button class="btn blue" onclick="confirmCreate()">สร้างพาเลท</button>
+  <button class="btn gray" onclick="clearCreateForm()">ล้างข้อมูล</button>
+  <button class="btn red" onclick="toggleCancelBox()">CANCEL พาเลทที่สร้างผิด</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="createMsg" class="msg"></div>
+
+  <div id="cancelBox" class="searchMini hidden">
+    <h3>CANCEL เฉพาะพาเลทที่ยังไม่ถูกเบิก/ย้าย/ใช้จริง</h3>
+    <label>ค้นหา PalletID / ประเภทงาน / ลูกค้า</label>
+    <input id="cancelSearchKeyword" placeholder="เช่น PLT / แผ่นรอง / ลูกค้า">
+    <button class="btn blue" onclick="searchCancelable()">ค้นหา</button>
+    <button class="btn gray" onclick="clearCancelSearch()">ล้างผลค้นหา</button>
+    <div id="cancelSearchMsg" class="msg"></div>
+    <div id="cancelResult"></div>
+  </div>
+
+  <div id="createPrintControl" class="printControl hidden noPrint">
+    <h3>เลือกป้ายที่ต้องการพิมพ์</h3>
+    <div id="printSelectList"></div>
+    <button class="btn green" onclick="printAllLabels()">พิมพ์ทั้งหมด</button>
+    <button class="btn blue" onclick="printSelectedLabels()">พิมพ์เฉพาะที่เลือก</button>
+  </div>
+
+  <div id="printArea"><div id="labelPreview"></div></div>
+</div>
+
+<div id="issueView" class="card hidden subview">
+  <h2>เบิก / ย้ายแผนก</h2>
+  <div class="infoBox">ผู้เบิก / ผู้ย้าย: <span id="issueLoginName" class="bigUse"></span></div>
+
+  <div class="searchMini">
+    <h3>ค้นหา / สแกน Pallet สำหรับเบิกหรือย้าย</h3>
+    <button class="btn green" onclick="startIssueScan()">เปิดกล้องสแกน QR</button>
+    <button class="btn gray" onclick="stopIssueScan()">ปิดกล้อง</button>
+    <div id="readerIssue" class="hidden"></div>
+
+    <label>ค้นหา PalletID / ประเภทงาน / แผนก / สถานะ</label>
+    <input id="issueSearchKeyword" placeholder="เช่น PLT / เสา / แผ่นรอง / คลังกลาง / WI" onpaste="setTimeout(searchPalletForIssue,120)">
+    <button class="btn blue" onclick="searchPalletForIssue()">ค้นหา</button>
+    <button class="btn gray" onclick="clearIssueSearch()">ล้างผลค้นหา</button>
+    <div id="issueSearchMsg" class="msg"></div>
+    <div id="issueSearchResult"></div>
+  </div>
+
+  <label>PalletID กรณีสแกนหรือคีย์รายการเดียว</label>
+  <input id="issuePalletId" onblur="loadIssuePalletInfo()" placeholder="สแกนหรือคีย์เอง">
+  <div id="issuePalletInfo" class="infoBox hidden"></div>
+
+  <label>แผนกปลายทาง</label>
+  <select id="issueToDept"></select>
+
+  <label>หมายเหตุ</label>
+  <input id="issueNote" placeholder="เช่น เบิกไปใช้รองงานลูกค้า">
+
+  <button class="btn orange" onclick="confirmIssue()">เบิก / ย้าย</button>
+  <button class="btn gray" onclick="clearIssueForm()">ล้างข้อมูล</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="issueMsg" class="msg"></div>
+</div>
+
+<div id="useView" class="card hidden subview">
+  <h2>ใช้จริง / ทำป้าย WI คงเหลือ</h2>
+  <div class="infoBox">ผู้ทำรายการ: <span id="useLoginName" class="bigUse"></span></div>
+  <div class="searchMini">
+    <button class="btn green" onclick="startUseScan()">เปิดกล้องสแกน QR</button>
+    <button class="btn gray" onclick="stopUseScan()">ปิดกล้อง</button>
+    <div id="readerUse" class="hidden"></div>
+    <label>ค้นหา PalletID / ประเภทงาน / แผนก / สถานะ</label>
+    <input id="useSearchKeyword" onpaste="setTimeout(searchPalletForUse,120)">
+    <button class="btn blue" onclick="searchPalletForUse()">ค้นหา</button>
+    <button class="btn gray" onclick="clearUseSearch()">ล้างผลค้นหา</button>
+    <div id="useSearchMsg" class="msg"></div>
+    <div id="useSearchResult"></div>
+  </div>
+  <label>PalletID</label><input id="usePalletId" onblur="loadUsePalletInfo()">
+  <div id="usePalletInfo" class="infoBox hidden"></div>
+  <label>น้ำหนักคงเหลือจริงหลังชั่ง KG</label><input id="remainKG" type="number" oninput="calcUseFromRemain()">
+  <div id="calcUseInfo" class="infoBox hidden"></div>
+  <button class="btn green" onclick="confirmRemain()">บันทึกใช้จริง + ทำป้าย WI คงเหลือ</button>
+  <button class="btn gray" onclick="clearUseForm()">ล้างข้อมูล</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="useMsg" class="msg"></div>
+  <div id="printAreaUse"><div id="labelPreviewUse"></div></div>
+  <button class="btn green" onclick="window.print()">พิมพ์ป้าย WI</button>
+</div>
+
+<div id="reprintView" class="card hidden subview">
+  <h2>พิมพ์ป้ายซ้ำ / ป้ายหาย</h2>
+  <label>PalletID</label><input id="reprintPalletId">
+  <button class="btn blue" onclick="loadReprint()">ค้นหา</button>
+  <button class="btn gray" onclick="clearReprintForm()">ล้างข้อมูล</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="reprintInfo" class="infoBox hidden"></div>
+  <div id="printAreaReprint"><div id="labelPreviewReprint"></div></div>
+  <button class="btn green" onclick="window.print()">พิมพ์ป้ายเดิมอีกครั้ง</button>
+</div>
+
+<div id="adminView" class="card hidden subview">
+  <h2>ตั้งค่า</h2>
+  <label>เพิ่มประเภท</label><input id="newType"><button class="btn blue" onclick="addType()">เพิ่มประเภท</button>
+  <label>ลบประเภท</label><select id="deleteTypeSelect"></select><button class="btn red" onclick="deleteType()">ลบประเภท</button><hr>
+  <label>เพิ่มแผนก</label><input id="newDept"><button class="btn blue" onclick="addDept()">เพิ่มแผนก</button>
+  <label>ลบแผนก</label><select id="deleteDeptSelect"></select><button class="btn red" onclick="deleteDept()">ลบแผนก</button><hr>
+  <button class="btn yellow" onclick="sendAlertNow()">ส่งแจ้งเตือน Stock ต่ำเดี๋ยวนี้</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="adminMsg" class="msg"></div>
+</div>
+
+<div id="reportView" class="card hidden subview">
+  <h2>Report / Dashboard</h2>
+  <div class="formRow">
+    <div class="formField"><label>รูปแบบรายงาน</label><select id="reportMode" onchange="changeReportMode()"><option value="DAY">รายวัน</option><option value="RANGE">เลือกช่วงวันที่</option><option value="MONTH">รายเดือน</option><option value="YEAR">รายปี</option></select></div>
+    <div class="formField"><label>เลือกประเภทงาน</label><select id="reportType"><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+    <div class="formField"><label>เลือก Report</label><select id="exportReportType" onchange="rerenderReportByType()"><option value="ALL">ทั้งหมด</option><option value="SUMMARY">สรุปตามประเภทงาน</option><option value="USE_SAP">รายงานการใช้จริงเข้า SAP</option><option value="WI">WI คงเหลือ</option><option value="TRACE">Trace / Balance</option></select></div>
+  </div>
+  <div id="dayBox" class="formRow"><div class="formField"><label>วันที่</label><input id="fromDate" type="date"></div></div>
+  <div id="rangeBox" class="formRow hidden"><div class="formField"><label>จากวันที่</label><input id="rangeFrom" type="date"></div><div class="formField"><label>ถึงวันที่</label><input id="rangeTo" type="date"></div></div>
+  <div id="monthBox" class="formRow hidden"><div class="formField"><label>เลือกเดือน</label><input id="reportMonth" type="month"></div></div>
+  <div id="yearBox" class="formRow hidden"><div class="formField"><label>เลือกปี</label><input id="reportYear" type="number"></div></div>
+  <button class="btn blue" onclick="loadReport()">สร้างรายงาน</button>
+  <button class="btn green" onclick="exportExcel()">Export Excel</button>
+  <button class="btn gray" onclick="clearReportForm()">ล้างข้อมูล</button>
+  <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
+  <div id="reportMsg" class="msg"></div>
+  <div id="reportOutput" class="hidden">
+    <div id="summarySection"><canvas id="chartCanvas" height="340"></canvas><h2 class="reportTitle reportBlue">📊 สรุปตามประเภทงาน</h2><div id="reportTable" class="reportBox boxBlue"></div></div>
+    <div id="useSection"><h2 class="reportTitle reportOrange">🟧 รายงานการใช้จริงเข้า SAP</h2><div id="useDetailTable" class="reportBox boxOrange"></div></div>
+    <div id="wiSection"><h2 class="reportTitle reportGreen">🟩 WI คงเหลือ</h2><div id="wiTable" class="reportBox boxGreen"></div></div>
+    <div id="traceSection"><h2 class="reportTitle reportPurple">🟪 Trace / Balance</h2><div id="traceTable" class="reportBox boxPurple"></div></div>
+  </div>
+</div>
+</div>
+
+<div id="modalBg" class="modalBg"><div class="modal"><h3 id="modalTitle"></h3><div id="modalText"></div><button class="btn blue" onclick="closeModal(true)">OK</button><button id="modalCancel" class="btn gray" onclick="closeModal(false)">ยกเลิก</button></div></div>
+
+<script>
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwnKE5nrtSgWCnv76h-yVxMRBb8UlKU1gXmQOegZffJBKDzooCrAu345pfzOKDSqcpF/exec';
+
+let currentUser=null,html5QrCodeUse=null,html5QrCodeIssue=null,isUseScanning=false,isIssueScanning=false,modalResolve=null,currentUsePallet=null,currentIssuePallet=null,suggestTimer=null,jobTimer=null,lastReportData=null,lastCreatedPallets=[];
+
+window.onload=()=>{setTodayDefaults();changeReportMode();clearReportScreen();renderKgInputs();setupEnterBehavior();};
+
+function showLoading(t='กำลังทำงาน กรุณารอสักครู่...'){loadingText.innerText=t;loadingBox.style.display='flex'}
+function hideLoading(){loadingBox.style.display='none'}
+
+function api(p,cb,loadingText='กำลังทำงาน กรุณารอสักครู่...',useLoading=true){
+if(useLoading)showLoading(loadingText);
+const c='cb_'+Date.now()+Math.floor(Math.random()*999);
+p.callback=c;
+const q=Object.keys(p).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(p[k]??'')).join('&');
+const s=document.createElement('script');
+s.src=GAS_API_URL+'?'+q;
+window[c]=r=>{delete window[c];s.remove();if(useLoading)hideLoading();cb(r)};
+s.onerror=()=>{if(useLoading)hideLoading();popup('ผิดพลาด','เชื่อมต่อ API ไม่สำเร็จ ตรวจสอบ GAS_API_URL')};
+document.body.appendChild(s);
+}
+
+function val(id){return document.getElementById(id)?.value.trim()||''}
+function setVal(id,v){document.getElementById(id).value=v}
+function msg(id,t,cls=''){let e=document.getElementById(id);e.className='msg '+cls;e.innerText=t}
+function popup(t,x,cf=false){modalTitle.innerText=t;modalText.innerText=x;modalCancel.style.display=cf?'inline-block':'none';modalBg.style.display='flex';return new Promise(r=>modalResolve=r)}
+function closeModal(v){modalBg.style.display='none';if(modalResolve)modalResolve(v)}
+function autoClosePopup(t='ไม่พบข้อมูล',x='ไม่พบข้อมูลในระบบ',ms=3000){
+const box=document.createElement('div');
+box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;';
+box.innerHTML=`<div style="background:#111827;border:2px solid #60a5fa;border-radius:18px;max-width:420px;width:90%;padding:24px;text-align:center;color:#fff;box-shadow:0 18px 40px rgba(0,0,0,.45)">
+<div style="font-size:24px;font-weight:900;color:#fecaca;margin-bottom:8px">${t}</div>
+<div style="font-size:18px;font-weight:900;line-height:1.45">${x}</div>
+<div style="font-size:13px;color:#bfdbfe;margin-top:10px">หน้าต่างนี้จะปิดเองภายใน 3 วินาที</div>
+</div>`;
+document.body.appendChild(box);
+setTimeout(()=>box.remove(),ms);
+}
+function nf(v){const n=Number(v);if(isNaN(n))return v??'';return n.toLocaleString('en-US')}
+function num(v){const n=Number(String(v??0).replace(/,/g,''));return isNaN(n)?0:n}
+function isAdmin(){return String(currentUser?.role||'').toUpperCase()==='ADMIN'}
+
+function setupEnterBehavior(){
+document.addEventListener('keydown',e=>{
+if(e.key!=='Enter')return;
+if(modalBg.style.display==='flex'){e.preventDefault();closeModal(true);return;}
+const el=document.activeElement;
+if(!el)return;
+if(el.tagName==='TEXTAREA')return;
+if(el.tagName==='BUTTON'){e.preventDefault();el.click();return;}
+if(['INPUT','SELECT'].includes(el.tagName)){
+e.preventDefault();
+const f=Array.from(document.querySelectorAll('input,select,textarea,button')).filter(x=>!x.disabled&&x.offsetParent!==null);
+const i=f.indexOf(el);
+if(i>=0&&f[i+1])f[i+1].focus();
+}
+});
+document.addEventListener('click',e=>{
+if(!loginView.classList.contains('hidden')){
+if(!loginSuggest.contains(e.target)&&e.target!==loginUser)loginSuggest.classList.add('hidden');
+}
+});
+}
+
+function setTodayDefaults(){
+const d=new Date();
+const yyyy=d.getFullYear();
+const mm=String(d.getMonth()+1).padStart(2,'0');
+const dd=String(d.getDate()).padStart(2,'0');
+['fromDate','rangeFrom','rangeTo','createDateAdmin'].forEach(id=>setVal(id,`${yyyy}-${mm}-${dd}`));
+setVal('reportMonth',`${yyyy}-${mm}`);
+setVal('reportYear',yyyy);
+}
+function dateISOToTH(v){if(!v)return '';const p=v.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v}
+function monthISOToTH(v){if(!v)return '';const p=v.split('-');return p.length===2?`${p[1]}/${p[0]}`:v}
+function todayTHDateTime(){const d=new Date();return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+
+function renderUserSuggestList(users){
+loginSuggest.innerHTML=(users||[]).map(u=>`
+<div class="autoItem" onclick="pickUser('${u.username}')">
+  <b>${u.name||u.username}</b><br>
+  <span style="color:#bfdbfe">${u.username} | ${u.dept||'-'} | ${u.role||'-'}</span>
+</div>
+`).join('');
+loginSuggest.classList.toggle('hidden',!(users||[]).length);
+}
+function showAllUsers(){api({action:'suggestUsers',keyword:''},r=>{renderUserSuggestList(r.users||[])},'กำลังโหลดรายชื่อ USER...')}
+function suggestUsersRealtime(){
+clearTimeout(suggestTimer);
+suggestTimer=setTimeout(()=>{
+let k=val('loginUser');
+if(!k){loginSuggest.classList.add('hidden');return;}
+api({action:'suggestUsers',keyword:k},r=>{renderUserSuggestList(r.users||[])},'กำลังค้นหา USER...');
+},150)
+}
+function pickUser(u){setVal('loginUser',u);loginSuggest.classList.add('hidden');loginPass.focus()}
+
+function login(){
+api({action:'login',username:val('loginUser'),password:val('loginPass')},r=>{
+if(!r.ok){
+if(r.needSelect&&r.users){renderUserSuggestList(r.users)}
+msg('loginMsg',r.message,'danger');
+return;
+}
+currentUser=r.user;
+loginView.classList.add('hidden');
+mainView.classList.remove('hidden');
+userInfo.innerText=`${r.user.name} | ${r.user.dept} | ${r.user.role}`;
+applyName();applyRoleMenu();loadSetup();checkAlert(false);
+},'กำลังเข้าสู่ระบบ...');
+}
+function applyRoleMenu(){isAdmin()?adminMenuBtn.classList.remove('hidden'):adminMenuBtn.classList.add('hidden');isAdmin()?adminCreateDateBox.classList.remove('hidden'):adminCreateDateBox.classList.add('hidden')}
+function applyName(){let n=currentUser?.name||'';['createLoginName','issueLoginName','useLoginName'].forEach(id=>document.getElementById(id).innerText=n)}
+function clearLoginForm(){setVal('loginUser','');setVal('loginPass','');loginSuggest.classList.add('hidden');msg('loginMsg','')}
+
+function loadSetup(){
+api({action:'setup'},r=>{
+if(!r.ok)return;
+fill('createType',r.types);
+fillDeptSelect('createDept',r.depts,'-- กรุณาเลือกแผนกผู้สร้าง --');
+fillDeptSelect('issueToDept',r.depts,'-- กรุณาเลือกแผนกปลายทาง --');
+fill('deleteTypeSelect',r.types);
+fill('deleteDeptSelect',r.depts);
+reportType.innerHTML='<option value="ทั้งหมด">ทั้งหมด</option>';
+(r.types||[]).forEach(x=>reportType.innerHTML+=`<option>${x}</option>`);
+onCreateTypeChange();
+},'กำลังโหลดข้อมูลตั้งค่า...');
+}
+function fill(id,a){let e=document.getElementById(id);e.innerHTML='';(a||[]).forEach(x=>e.innerHTML+=`<option>${x}</option>`)}
+function fillDeptSelect(id,a,first){let e=document.getElementById(id);e.innerHTML=`<option value="">${first}</option>`;(a||[]).forEach(x=>e.innerHTML+=`<option>${x}</option>`)}
+function showView(id){
+document.querySelectorAll('.subview').forEach(x=>x.classList.add('hidden'));
+mainView.classList.add('hidden');
+if(id==='adminView'&&!isAdmin()){popup('แจ้งเตือน','เมนูนี้สำหรับ ADMIN เท่านั้น');mainView.classList.remove('hidden');return;}
+document.getElementById(id).classList.remove('hidden');
+applyName();
+if(id==='createView'){setVal('createDept','');renderKgInputs();onCreateTypeChange()}
+if(id==='issueView')setVal('issueToDept','');
+if(id==='reportView'){clearReportScreen();setTodayDefaults();changeReportMode()}
+}
+function backHome(){
+document.querySelectorAll('.subview').forEach(x=>x.classList.add('hidden'));
+clearReportScreen();
+stopUseScan();
+stopIssueScan();
+mainView.classList.remove('hidden');
+checkAlert(false);
+}
+
+function onCreateTypeChange(){val('createType')==='แผ่นงานลูกค้า'?customerForm.classList.remove('hidden'):customerForm.classList.add('hidden');renderKgInputs()}
+function renderKgInputs(){
+let c=Number(val('createPalletCount')||1);
+if(c<1)c=1;
+if(c>50)c=50;
+setVal('createPalletCount',c);
+let isCust=val('createType')==='แผ่นงานลูกค้า';
+let h='';
+for(let i=1;i<=c;i++){
+h+=`<div class="kgItem">${isCust?`<label>จำนวนในพาเลทที่ ${i}</label><input class="qtyEach" type="number" oninput="kgFromQty(${i-1})" placeholder="จำนวนกล่อง/แผ่น">`:''}<label>น้ำหนักพาเลทที่ ${i} KG</label><input class="kgEach" type="number" step="0.01" placeholder="กรอก KG พาเลทที่ ${i}"></div>`
+}
+kgInputArea.innerHTML=h;
+if(isCust)autoCalcCustomerPallets()
+}
+function kgFromQty(i){
+const q=Number(document.querySelectorAll('.qtyEach')[i]?.value||0);
+const w=Number(val('weightBox')||0);
+const kg=document.querySelectorAll('.kgEach')[i];
+if(kg&&w>0)kg.value=(q*w).toFixed(2)
+}
+function autoCalcCustomerPallets(){
+if(val('createType')!=='แผ่นงานลูกค้า')return;
+let order=Number(val('orderQty')||0), count=Number(val('createPalletCount')||1), w=Number(val('weightBox')||0);
+if(order<=0||count<=0)return;
+let base=Math.floor(order/count), remain=order-(base*count);
+let qtys=document.querySelectorAll('.qtyEach');
+let kgs=document.querySelectorAll('.kgEach');
+for(let i=0;i<count;i++){
+let q=base+(i===count-1?remain:0);
+if(qtys[i])qtys[i].value=q;
+if(kgs[i]&&w>0)kgs[i].value=(q*w).toFixed(2)
+}
+}
+
+function suggestCustomerJobsRealtime(mode){
+clearTimeout(jobTimer);
+jobTimer=setTimeout(()=>{
+let k=mode==='pc'?val('pc'):val('materialNo');
+let box=mode==='pc'?jobSuggestPc:jobSuggestMat;
+if(!k){box.classList.add('hidden');return;}
+api({action:'suggestCustomerJobs',keyword:k},r=>{
+let a=r.jobs||[];
+box.innerHTML=a.map(j=>`<div class="autoItem" onclick='pickCustomerJob(${JSON.stringify(j).replace(/'/g,"&#39;")})'>${j.pc||'-'} | ${j.materialNo||'-'} | ${j.custName||'-'} | ${j.weightBox||0}</div>`).join('');
+box.classList.toggle('hidden',!a.length);
+},'กำลังค้นหาข้อมูลงานลูกค้า...');
+},150)
+}
+function pickCustomerJob(j){
+setVal('pc',j.pc||'');
+setVal('materialNo',j.materialNo||'');
+setVal('custName',j.custName||'');
+setVal('boxType',j.boxType||'');
+setVal('cutSheetWid',j.cutSheetWid||'');
+setVal('cutSheetLeng',j.cutSheetLeng||'');
+setVal('flute',j.flute||'');
+setVal('board',j.board||'');
+setVal('weightBox',j.weightBox||'');
+jobSuggestPc.classList.add('hidden');
+jobSuggestMat.classList.add('hidden');
+autoCalcCustomerPallets()
+}
+
+function getKgList(){return Array.from(document.querySelectorAll('.kgEach')).map(x=>Number(x.value||0))}
+function getQtyList(){return Array.from(document.querySelectorAll('.qtyEach')).map(x=>Number(x.value||0))}
+function customerPayload(){return {pc:val('pc'),materialNo:val('materialNo'),custName:val('custName'),boxType:val('boxType'),cutSheetWid:val('cutSheetWid'),cutSheetLeng:val('cutSheetLeng'),flute:val('flute'),board:val('board'),weightBox:val('weightBox'),soNo:val('soNo'),orderQty:val('orderQty'),orderUnit:val('orderUnit')}}
+function createDatePayload(){return isAdmin()?dateISOToTH(val('createDateAdmin')):''}
+
+async function confirmCreate(){
+const type=val('createType'),createDept=val('createDept'),kgList=getKgList(),qtyList=getQtyList(),count=Number(val('createPalletCount')||1);
+if(!type)return popup('แจ้งเตือน','กรุณาเลือกประเภทงาน');
+if(!createDept)return popup('แจ้งเตือน','กรุณาเลือกแผนกผู้สร้างก่อนสร้างพาเลท');
+if(type==='แผ่นงานลูกค้า'){
+if(!val('custName'))return popup('แจ้งเตือน','กรุณากรอกหรือเลือก Cust_Name');
+if(Number(val('orderQty')||0)<=0)return popup('แจ้งเตือน','กรุณากรอก ORDER');
+if(Number(val('weightBox')||0)<=0)return popup('แจ้งเตือน','กรุณากรอก Weight_Box');
+}
+if(kgList.some(x=>x<=0))return popup('แจ้งเตือน','กรุณากรอกน้ำหนัก KG ให้ครบทุกพาเลท');
+if(!await popup('ยืนยัน','ยืนยันการสร้างพาเลท จำนวน '+count+' พาเลท ใช่หรือไม่?',true))return;
+const payload={action:'bulkCreatePallet',username:currentUser.username,type,createDept,remark:val('createRemark'),createDate:createDatePayload(),palletCount:count,weights:JSON.stringify(kgList),qtyPerPallet:qtyList[0]||0,...customerPayload()};
+api(payload,r=>{
+msg('createMsg',r.message,r.ok?'ok':'danger');
+if(r.ok){
+lastCreatedPallets=(r.pallets||[]).map((p,i)=>({
+...p,
+pc:payload.pc||p.pc||'',
+materialNo:payload.materialNo||p.materialNo||'',
+custName:payload.custName||p.custName||'',
+boxType:payload.boxType||p.boxType||'',
+cutSheetWid:payload.cutSheetWid||p.cutSheetWid||p.cutWid||'',
+cutWid:payload.cutSheetWid||p.cutWid||p.cutSheetWid||'',
+cutSheetLeng:payload.cutSheetLeng||p.cutSheetLeng||p.cutLen||'',
+cutLen:payload.cutSheetLeng||p.cutLen||p.cutSheetLeng||'',
+flute:payload.flute||p.flute||'',
+board:payload.board||p.board||'',
+soNo:payload.soNo||p.soNo||'',
+orderQty:payload.orderQty||p.orderQty||0,
+orderUnit:payload.orderUnit||p.orderUnit||'',
+qtyPerPallet:qtyList[i]||p.qtyPerPallet||0,
+palletSeq:p.palletSeq||i+1,
+palletTotal:p.palletTotal||count
+}));
+renderMultiLabels(lastCreatedPallets,'labelPreview');
+renderPrintSelector(lastCreatedPallets);
+createPrintControl.classList.remove('hidden');
+clearCreateAfterSave();
+checkAlert(false);
+}
+popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
+},'กำลังสร้างพาเลท...');
+}
+
+function clearCreateAfterSave(){
+setVal('createPalletCount',1);
+['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));
+renderKgInputs()
+}
+
+function renderPrintSelector(pallets){printSelectList.innerHTML=(pallets||[]).map(p=>`<label class="printSelectLine"><input type="checkbox" class="printChk" value="${p.palletId}" checked> ${p.palletId} | ${p.type} | ${nf(p.kg||p.remainingKG||p.originalKG)} KG</label>`).join('')}
+function printAllLabels(){document.querySelectorAll('.labelBox').forEach(x=>x.classList.remove('hidden'));window.print()}
+function printSelectedLabels(){
+const selected=Array.from(document.querySelectorAll('.printChk:checked')).map(x=>x.value);
+document.querySelectorAll('.labelBox').forEach(x=>x.classList.toggle('hidden',!selected.includes(x.dataset.pid)));
+window.print();
+setTimeout(()=>document.querySelectorAll('.labelBox').forEach(x=>x.classList.remove('hidden')),500)
+}
+function renderMultiLabels(pallets,id){document.getElementById(id).innerHTML=(pallets||[]).map(p=>labelHtml(p)).join('')}
+function renderLabel(p,id){document.getElementById(id).innerHTML=labelHtml(p)}
+function getPalletKG(p){return p.remainingKG??p.remainingKg??p.kg??p.originalKG??0}
+function labelHtml(p){
+const qr='https://api.qrserver.com/v1/create-qr-code/?size=340x340&data='+encodeURIComponent(p.palletId);
+const printBy=currentUser?.name||p.createBy||'-',printDept=currentUser?.dept||p.createDept||'-',printDate=todayTHDateTime();
+const pc=p.pc||'-';
+const material=p.materialNo||p.Material_No||p.material_no||'-';
+const cust=p.custName||p.Cust_Name||'-';
+const boxType=p.boxType||p.Box_Type||'-';
+const wid=p.cutSheetWid||p.CutSheetWid||p.cutWid||'-';
+const leng=p.cutSheetLeng||p.CutSheetLeng||p.cutLen||'-';
+const flute=p.flute||p.Flute||'-';
+const board=p.board||p.Board||'-';
+const so=p.soNo||p.SONo||'-';
+const orderQty=p.orderQty||p.OrderQty||0;
+const orderUnit=p.orderUnit||p.OrderUnit||'';
+const palletSeq=p.palletSeq||p.PalletSeq||'-';
+const palletTotal=p.palletTotal||p.PalletTotal||'-';
+const qtyPerPallet=p.qtyPerPallet||p.QtyPerPallet||0;
+if(p.type==='แผ่นงานลูกค้า'){
+return `<div class="labelBox customerLabel" data-pid="${p.palletId}">
+<div class="customerLabelTitle">แผ่นงานลูกค้า</div>
+<div class="pid">${p.palletId}</div>
+<div class="labelKgValue">${nf(getPalletKG(p))} KG</div>
+<div class="customerName">${cust}</div>
+<div class="labelDetail">PC: ${pc}</div>
+<div class="labelDetail">Material: ${material}</div>
+<div class="labelDetail">Box_Type: ${boxType}</div>
+<div class="labelDetail">Size: ${wid} x ${leng}</div>
+<div class="labelDetail">Flute: ${flute} | Board: ${board}</div>
+<div class="labelDetail">S/O: ${so}</div>
+<div class="customerOrderLine">ORDER ตั้งต้น: ${nf(orderQty)} ${orderUnit}</div>
+<div class="customerQtyLine">พาเลทที่ ${palletSeq}/${palletTotal}</div>
+<div class="customerQtyLine">จำนวนต่อพาเลท: ${nf(qtyPerPallet)} ${orderUnit}</div>
+<img src="${qr}">
+<div class="labelMeta">วันที่สร้าง: ${p.createDate||'-'} | วันที่พิมพ์: ${printDate}</div>
+<div class="labelMetaSmall">ผู้สร้าง/พิมพ์: ${printBy} | ${printDept}</div>
+<div class="labelMetaSmall">น้ำหนักตั้งต้นครั้งแรก: ${nf(p.rootKG||p.originalKG||p.kg||0)} KG</div>
+</div>`;
+}
+return `<div class="labelBox" data-pid="${p.palletId}">
+<div class="labelTypeText">ประเภทงาน</div><div class="labelTypeValue">${p.type}</div>
+<div class="labelKgTitle">น้ำหนักคงเหลือ</div><div class="labelKgValue">${nf(getPalletKG(p))} KG</div>
+<img src="${qr}"><div class="pid">${p.palletId}</div>
+<div class="labelMeta">วันที่สร้าง: ${p.createDate||'-'} | วันที่พิมพ์: ${printDate}</div>
+<div class="labelMetaSmall">ผู้พิมพ์: ${printBy} | ${printDept}</div>
+<div class="labelMetaSmall">น้ำหนักตั้งต้นครั้งแรก: ${nf(p.rootKG||p.originalKG||p.kg||0)} KG</div>
+</div>`;
+}
+
+function toggleCancelBox(){cancelBox.classList.toggle('hidden')}
+function searchCancelable(){
+api({action:'searchCancelablePallets',username:currentUser.username,keyword:val('cancelSearchKeyword')},r=>{
+let data=r.pallets||[];
+let h='<table><tr><th><input type="checkbox" onchange="toggleCancelAll(this)"></th><th>PalletID</th><th>Type</th><th>KG</th><th>Dept</th><th>Status</th><th>วันที่สร้าง</th></tr>';
+data.forEach(p=>{h+=`<tr><td><input type="checkbox" class="cancelChk" value="${p.palletId}"></td><td>${p.palletId}</td><td>${p.type}</td><td>${nf(p.remainingKG)}</td><td>${p.currentDept}</td><td>${p.status}</td><td>${p.createDate}</td></tr>`});
+cancelResult.innerHTML=h+'</table><button class="btn red" onclick="confirmBulkCancel()">CANCEL รายการที่เลือก</button>';
+msg('cancelSearchMsg','พบ '+nf(data.length)+' รายการ','ok')
+},'กำลังค้นหารายการที่ยกเลิกได้...')
+}
+function toggleCancelAll(el){document.querySelectorAll('.cancelChk').forEach(x=>x.checked=el.checked)}
+function clearCancelSearch(){setVal('cancelSearchKeyword','');cancelResult.innerHTML='';msg('cancelSearchMsg','')}
+async function confirmBulkCancel(){
+const ids=Array.from(document.querySelectorAll('.cancelChk:checked')).map(x=>x.value);
+if(!ids.length)return popup('แจ้งเตือน','กรุณาติ๊กเลือกรายการที่ต้องการ CANCEL');
+if(!await popup('ยืนยัน','ยืนยัน CANCEL รายการต่อไปนี้หรือไม่?\n\n'+ids.join('\n'),true))return;
+api({action:'bulkCancelPallet',username:currentUser.username,palletIds:JSON.stringify(ids)},r=>{
+popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
+if(r.ok){clearCancelSearch();searchCancelable();checkAlert(false)}
+},'กำลัง CANCEL รายการ...')
+}
+
+function loadIssuePalletInfo(){
+if(!val('issuePalletId'))return;
+api({action:'getPallet',username:currentUser.username,palletId:val('issuePalletId')},r=>{
+issuePalletInfo.classList.remove('hidden');
+if(!r.ok){issuePalletInfo.innerText='ไม่พบข้อมูลพาเลท';currentIssuePallet=null;return;}
+currentIssuePallet=r.pallet;
+issuePalletInfo.innerHTML=`<div style="font-size:22px;color:#facc15">${r.pallet.type}</div>น้ำหนักคงเหลือล่าสุด: <span class="bigKg">${nf(r.pallet.remainingKG)} KG</span><br>น้ำหนักตั้งต้นครั้งแรก: <b>${nf(r.pallet.originalKG)} KG</b><br>แผนกปัจจุบัน: <b>${r.pallet.currentDept}</b><br>สถานะ: <b>${r.pallet.status}</b>`
+},'กำลังโหลดข้อมูลพาเลท...')
+}
+function searchPalletForIssue(){
+msg('issueSearchMsg','กำลังค้นหา กรุณารอสักครู่...','ok');
+api({action:'searchPallet',username:currentUser.username,keyword:val('issueSearchKeyword')},r=>{
+let data=(r.pallets||[]).filter(p=>Number(p.remainingKG)>0&&['ACTIVE','WI'].includes(String(p.status)));
+let h='<table><tr><th><input type="checkbox" onchange="toggleIssueAll(this)"></th><th>PalletID</th><th>Type</th><th>KG</th><th>Dept</th><th>Status</th></tr>';
+data.forEach(p=>{h+=`<tr><td><input type="checkbox" class="issueChk" value="${p.palletId}"></td><td>${p.palletId}</td><td>${p.type}</td><td>${nf(p.remainingKG)}</td><td>${p.currentDept}</td><td>${p.status}</td></tr>`});
+issueSearchResult.innerHTML=h+'</table><button class="btn orange" onclick="confirmBulkIssue()">เบิก/ย้ายรายการที่เลือก</button>';
+msg('issueSearchMsg','พบ '+nf(data.length)+' รายการ','ok')
+},'กำลังค้นหา Pallet...')
+}
+function toggleIssueAll(el){document.querySelectorAll('.issueChk').forEach(x=>x.checked=el.checked)}
+function clearIssueSearch(){setVal('issueSearchKeyword','');issueSearchResult.innerHTML='';msg('issueSearchMsg','')}
+async function confirmIssue(){
+const selected=Array.from(document.querySelectorAll('.issueChk:checked')).map(x=>x.value);
+if(selected.length){return confirmBulkIssue();}
+if(!val('issuePalletId'))return popup('แจ้งเตือน','กรุณากรอก PalletID หรือเลือกจากตารางก่อนย้าย');
+if(!val('issueToDept'))return popup('แจ้งเตือน','กรุณาเลือกแผนกปลายทางก่อนบันทึก');
+if(!await popup('ยืนยัน','ยืนยันเบิก / ย้าย PalletID นี้หรือไม่?\n\n'+val('issuePalletId'),true))return;
+api({action:'issuePallet',username:currentUser.username,palletId:val('issuePalletId'),toDept:val('issueToDept'),remark:val('issueNote')},r=>{
+msg('issueMsg',r.message,r.ok?'ok':'danger');
+popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
+if(r.ok){clearIssueForm();clearIssueSearch();checkAlert(false)}
+},'กำลังบันทึกเบิก / ย้าย...')
+}
+async function confirmBulkIssue(){
+const ids=Array.from(document.querySelectorAll('.issueChk:checked')).map(x=>x.value);
+if(ids.length===0)return popup('แจ้งเตือน','กรุณาติ๊กเลือกพาเลทอย่างน้อย 1 รายการ');
+if(!val('issueToDept'))return popup('แจ้งเตือน','กรุณาเลือกแผนกปลายทางก่อนบันทึก');
+const text=`ยืนยันเบิก / ย้าย ${ids.length} พาเลท ไปแผนก ${val('issueToDept')} ใช่หรือไม่?\n\n${ids.join('\n')}`;
+if(!await popup('ยืนยัน',text,true))return;
+api({action:'bulkIssuePallet',username:currentUser.username,palletIds:JSON.stringify(ids),toDept:val('issueToDept'),remark:val('issueNote')},r=>{
+msg('issueMsg',r.message,r.ok?'ok':'danger');
+popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
+if(r.ok){clearIssueForm();clearIssueSearch();checkAlert(false)}
+},'กำลังบันทึกย้ายหลายรายการ...')
+}
+
+function loadUsePalletInfo(){
+if(!val('usePalletId'))return;
+api({action:'getPallet',username:currentUser.username,palletId:val('usePalletId')},r=>{
+usePalletInfo.classList.remove('hidden');
+if(!r.ok){usePalletInfo.innerText='ไม่พบข้อมูล';currentUsePallet=null;return;}
+currentUsePallet=r.pallet;
+usePalletInfo.innerHTML=`<div style="font-size:22px;color:#facc15">${r.pallet.type}</div>น้ำหนักคงเหลือล่าสุด: <span class="bigKg">${nf(r.pallet.remainingKG)} KG</span><br>น้ำหนักตั้งต้นครั้งแรก: <b>${nf(r.pallet.originalKG)} KG</b><br>แผนก: ${r.pallet.currentDept}<br>สถานะ: ${r.pallet.status}`;
+calcUseFromRemain()
+},'กำลังโหลดข้อมูลพาเลท...')
+}
+function calcUseFromRemain(){
+if(!currentUsePallet||val('remainKG')==='')return;
+let remain=Number(val('remainKG')),before=currentUsePallet.remainingKG,use=before-remain;
+calcUseInfo.classList.remove('hidden');
+calcUseInfo.innerHTML=`น้ำหนักก่อนตัด: <span class="bigKg">${nf(before)} KG</span><br>ยอดใช้จริงเข้า SAP: <span class="bigUse">${nf(use)} KG</span><br>ยอด WI คงเหลือออกป้าย: <span class="bigKg">${nf(remain)} KG</span>`
+}
+async function confirmRemain(){
+if(!val('usePalletId'))return popup('แจ้งเตือน','กรุณากรอก PalletID');
+if(val('remainKG')==='')return popup('แจ้งเตือน','กรุณากรอกน้ำหนักคงเหลือจริง');
+if(!await popup('ยืนยัน','บันทึกใช้จริงและทำป้าย WI ใช่หรือไม่?',true))return;
+api({action:'useByRemain',username:currentUser.username,palletId:val('usePalletId'),remainKG:val('remainKG')},r=>{
+msg('useMsg',r.message,r.ok?'ok':'danger');
+if(r.ok&&r.pallet){
+const remain=num(r.pallet.remainingKG);
+if(remain>0){
+renderLabel(r.pallet,'labelPreviewUse');
+}else{
+labelPreviewUse.innerHTML='';
+popup('แจ้งเตือน','พาเลทนี้ใช้งานหมดแล้ว คงเหลือ 0 KG ระบบไม่แสดงป้าย WI คงเหลือ');
+}
+checkAlert(false);
+if(useSearchResult.innerHTML.trim())searchPalletForUse(false);
+clearUseInputAfterSave();
+}
+if(!(r.ok&&r.pallet&&num(r.pallet.remainingKG)<=0))popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
+},'กำลังบันทึกใช้จริง...')
+}
+function clearUseInputAfterSave(){
+setVal('usePalletId','');
+setVal('remainKG','');
+currentUsePallet=null;
+usePalletInfo.classList.add('hidden');
+calcUseInfo.classList.add('hidden')
+}
+function searchPalletForUse(showLoad=true){
+msg('useSearchMsg','กำลังค้นหา กรุณารอสักครู่...','ok');
+api({action:'searchPallet',username:currentUser.username,keyword:val('useSearchKeyword')},r=>{
+let data=(r.pallets||[]).filter(p=>Number(p.remainingKG)>0&&['ACTIVE','WI'].includes(String(p.status)));
+let h='<table><tr><th>PalletID</th><th>Type</th><th>KG</th><th>Dept</th><th>Status</th><th>เลือก</th></tr>';
+data.forEach(p=>{h+=`<tr><td>${p.palletId}</td><td>${p.type}</td><td>${nf(p.remainingKG)}</td><td>${p.currentDept}</td><td>${p.status}</td><td><button class="btn green btnMini" onclick="setVal('usePalletId','${p.palletId}');loadUsePalletInfo()">เลือก</button></td></tr>`});
+useSearchResult.innerHTML=h+'</table>';
+msg('useSearchMsg','พบ '+nf(data.length)+' รายการ','ok')
+},'กำลังค้นหา Pallet...',showLoad)
+}
+function clearUseSearch(){setVal('useSearchKeyword','');useSearchResult.innerHTML='';msg('useSearchMsg','')}
+
+function loadReprint(){
+if(!val('reprintPalletId'))return popup('แจ้งเตือน','กรุณากรอก PalletID');
+api({action:'getPallet',username:currentUser.username,palletId:val('reprintPalletId')},r=>{
+if(!r.ok)return popup('ผิดพลาด',r.message);
+reprintInfo.classList.remove('hidden');
+reprintInfo.innerHTML=`ประเภทงาน : ${r.pallet.type}<br>คงเหลือล่าสุด : <span class="bigKg">${nf(r.pallet.remainingKG)} KG</span><br>น้ำหนักตั้งต้นครั้งแรก : ${nf(r.pallet.originalKG)} KG<br>แผนก : ${r.pallet.currentDept}<br>สถานะ : ${r.pallet.status}`;
+renderLabel(r.pallet,'labelPreviewReprint');
+setVal('reprintPalletId','')
+},'กำลังค้นหาป้ายเดิม...')
+}
+function clearReprintForm(){setVal('reprintPalletId','');reprintInfo.classList.add('hidden');labelPreviewReprint.innerHTML=''}
+
+function checkAlert(showLoad=false){
+api({action:'checkStockAlert',username:currentUser?.username||''},r=>{
+let lows=(r.alerts||[]);
+alertArea.innerHTML=lows.map(a=>`<div class="alertBox"><div>${a.type} เหลือน้อยกว่ากำหนด: ปัจจุบัน ${nf(a.currentPallet)} พาเลท / ${nf(a.currentKG)} KG, ขั้นต่ำ ${nf(a.minPallet)} พาเลท / ${nf(a.minKG)} KG<br><small>ข้อมูล Real-time จากคลังกลางเท่านั้น</small></div><button class="btn yellow" onclick="sendAlertNow()">แจ้ง E-MAIL</button></div>`).join('')
+},'กำลังตรวจสอบ Stock Alert...',showLoad)
+}
+async function sendAlertNow(){
+if(!await popup('ยืนยัน','ส่ง Email แจ้ง Stock ต่ำทั้งหมดในฉบับเดียวใช่หรือไม่?',true))return;
+api({action:'sendStockAlertNow',username:currentUser.username},r=>popup(r.ok?'สถานะ':'ผิดพลาด',r.message),'กำลังส่ง Email...')
+}
+
+function changeReportMode(){
+const m=reportMode.value;
+dayBox.classList.add('hidden');rangeBox.classList.add('hidden');monthBox.classList.add('hidden');yearBox.classList.add('hidden');
+if(m==='DAY')dayBox.classList.remove('hidden');
+if(m==='RANGE')rangeBox.classList.remove('hidden');
+if(m==='MONTH')monthBox.classList.remove('hidden');
+if(m==='YEAR')yearBox.classList.remove('hidden');
+clearReportScreen()
+}
+function loadReport(){
+let m=reportMode.value,p={action:'report',username:currentUser.username,reportType:exportReportType.value,type:reportType.value};
+if(m==='DAY'){p.mode='DAY';p.fromDate=dateISOToTH(val('fromDate'))}
+if(m==='RANGE'){p.mode='RANGE';p.fromDate=dateISOToTH(val('rangeFrom'));p.toDate=dateISOToTH(val('rangeTo'))}
+if(m==='MONTH'){p.mode='MONTH';p.month=monthISOToTH(val('reportMonth'))}
+if(m==='YEAR'){p.mode='YEAR';p.year=val('reportYear')}
+api(p,r=>{
+msg('reportMsg',r.message,r.ok?'ok':'danger');
+if(!r.ok)return;
+lastReportData=r;
+renderReport(r)
+},'กำลังสร้างรายงาน...')
+}
+function rerenderReportByType(){if(lastReportData)renderReport(lastReportData)}
+function renderReport(r){
+reportOutput.classList.remove('hidden');
+const selected=val('exportReportType');
+summarySection.classList.toggle('hidden',!(selected==='ALL'||selected==='SUMMARY'));
+useSection.classList.toggle('hidden',!(selected==='ALL'||selected==='USE_SAP'));
+wiSection.classList.toggle('hidden',!(selected==='ALL'||selected==='WI'));
+traceSection.classList.toggle('hidden',!(selected==='ALL'||selected==='TRACE'));
+reportTable.innerHTML=tblWithTotal(['ประเภท','สร้าง KG','ใช้ KG','WI KG','พาเลท','Balance'],(r.summary||[]).map(x=>[x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.pallet),num(x.balance)]),[1,2,3,4,5]);
+useDetailTable.innerHTML=tblWithTotal(['วันที่','PalletID','ประเภท','ใช้ KG','แผนก','ผู้ทำ','Remark'],(r.useSAP||[]).map(x=>[x.date,x.palletId,x.type,num(x.useKG),x.dept,x.user,x.remark||'']),[3]);
+wiTable.innerHTML=tblWithTotal(['PalletID','Type','KG','Dept','Status','Remark'],(r.wiRemain||[]).map(x=>[x.palletId,x.type,num(x.remainingKG),x.currentDept,x.status,x.remark||'']),[2]);
+traceTable.innerHTML=tblWithTotal(['RootID','Type','Create KG','Use KG','WI','Balance','Status','Remark'],(r.trace||[]).map(x=>[x.rootId,x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.balance),x.status,x.remark||'']),[2,3,4,5]);
+drawChart(r.summary||[])
+}
+function formatCell(c){return typeof c==='number'?nf(c):c}
+function tblWithTotal(h,rows,totalCols){
+let html='<table><thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>';
+html+=rows.map(r=>'<tr>'+r.map(c=>`<td>${formatCell(c)}</td>`).join('')+'</tr>').join('');
+html+='</tbody>';
+if(rows.length){
+html+='<tfoot><tr>';
+h.forEach((_,i)=>{
+if(i===0)html+='<td>รวมทั้งหมด</td>';
+else if(totalCols.includes(i)){
+const sum=rows.reduce((a,r)=>a+num(r[i]),0);
+html+=`<td>${nf(sum)}</td>`;
+}else html+='<td></td>';
+});
+html+='</tr></tfoot>';
+}
+html+='</table>';
+return html;
+}
+function drawChart(rows){
+let c=chartCanvas,ctx=c.getContext('2d');
+c.width=c.clientWidth;
+c.height=460;
+ctx.clearRect(0,0,c.width,c.height);
+
+const wiColors=[
+'#2563eb','#16a34a','#dc2626','#9333ea',
+'#14b8a6','#eab308','#ec4899','#38bdf8',
+'#84cc16','#a855f7','#f43f5e','#0ea5e9'
+];
+
+const useColor='#ff7a18';
+
+let max=Math.max(
+...rows.map(r=>num(r.useKG||0)),
+...rows.map(r=>num(r.wiKG||0)),
+1
+);
+
+let x=55,baseY=350,barW=38,gapGroup=72,gapBar=12;
+
+ctx.font='bold 28px Arial';
+ctx.fillStyle='#fff';
+ctx.fillText('กราฟเปรียบเทียบยอดใช้จริง KG กับ WI คงเหลือ KG ตามประเภทงาน',30,42);
+
+ctx.font='bold 18px Arial';
+ctx.fillStyle=useColor;
+ctx.fillText('■ ใช้จริง KG',34,78);
+ctx.fillStyle='#60a5fa';
+ctx.fillText('■ WI คงเหลือ KG',180,78);
+
+rows.forEach((r,i)=>{
+let useVal=num(r.useKG||0);
+let wiVal=num(r.wiKG||0);
+
+let useH=(useVal/max)*250;
+let wiH=(wiVal/max)*250;
+
+let wiColor=wiColors[i%wiColors.length];
+
+draw3DBar(ctx,x,baseY-useH,barW,useH,useColor);
+draw3DBar(ctx,x+barW+gapBar,baseY-wiH,barW,wiH,wiColor);
+
+ctx.fillStyle='#fff';
+ctx.font='bold 17px Arial';
+ctx.textAlign='center';
+ctx.fillText(nf(useVal),x+(barW/2),baseY-useH-12);
+ctx.fillText(nf(wiVal),x+barW+gapBar+(barW/2),baseY-wiH-12);
+
+ctx.font='bold 16px Arial';
+ctx.fillText('ใช้',x+(barW/2),baseY+24);
+ctx.fillText('WI',x+barW+gapBar+(barW/2),baseY+24);
+
+ctx.font='bold 16px Arial';
+ctx.fillStyle='#ffffff';
+let label=String(r.type||'').slice(0,14);
+ctx.fillText(label,x+barW+4,baseY+52);
+ctx.textAlign='left';
+
+x+=barW*2+gapBar+gapGroup;
+});
+}
+
+function draw3DBar(ctx,x,y,w,h,color){
+if(h<=0){
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+8,y-10);
+  ctx.lineTo(x+w+8,y-10);
+  ctx.lineTo(x+w,y);
+  ctx.closePath();
+  ctx.fill();
+  return;
+}
+
+ctx.fillStyle='rgba(0,0,0,.35)';
+ctx.fillRect(x+8,y+8,w,h);
+
+let grad=ctx.createLinearGradient(x,y,x+w,y+h);
+grad.addColorStop(0,color);
+grad.addColorStop(1,'#111827');
+
+ctx.fillStyle=grad;
+ctx.fillRect(x,y,w,h);
+
+ctx.fillStyle='rgba(255,255,255,.28)';
+ctx.beginPath();
+ctx.moveTo(x,y);
+ctx.lineTo(x+8,y-10);
+ctx.lineTo(x+w+8,y-10);
+ctx.lineTo(x+w,y);
+ctx.closePath();
+ctx.fill();
+
+ctx.fillStyle='rgba(0,0,0,.28)';
+ctx.beginPath();
+ctx.moveTo(x+w,y);
+ctx.lineTo(x+w+8,y-10);
+ctx.lineTo(x+w+8,y+h-10);
+ctx.lineTo(x+w,y+h);
+ctx.closePath();
+ctx.fill();
+}
+
+function clearReportScreen(){
+lastReportData=null;
+if(typeof reportOutput!=='undefined')reportOutput.classList.add('hidden');
+['reportTable','useDetailTable','wiTable','traceTable','reportMsg'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).innerHTML=''});
+if(typeof chartCanvas!=='undefined'){let ctx=chartCanvas.getContext('2d');ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height)}
+}
+function clearReportForm(){setTodayDefaults();changeReportMode();clearReportScreen()}
+
+function clearCreateForm(){setVal('createPalletCount',1);['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));renderKgInputs();labelPreview.innerHTML='';createPrintControl.classList.add('hidden')}
+function clearIssueForm(){setVal('issueSearchKeyword','');setVal('issuePalletId','');setVal('issueNote','');setVal('issueToDept','');issueSearchResult.innerHTML='';issuePalletInfo.classList.add('hidden');msg('issueSearchMsg','');msg('issueMsg','')}
+function clearUseForm(){setVal('usePalletId','');setVal('remainKG','');labelPreviewUse.innerHTML='';usePalletInfo.classList.add('hidden');calcUseInfo.classList.add('hidden');currentUsePallet=null}
+async function addType(){if(!await popup('ยืนยัน','ยืนยันเพิ่มประเภทงานใช่หรือไม่?',true))return;api({action:'addType',username:currentUser.username,value:val('newType')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok){setVal('newType','');loadSetup()}popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังเพิ่มประเภทงาน...')}
+async function deleteType(){if(!await popup('ยืนยัน','ยืนยันลบประเภทงานใช่หรือไม่?',true))return;api({action:'deleteType',username:currentUser.username,value:val('deleteTypeSelect')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok)loadSetup();popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังลบประเภทงาน...')}
+async function addDept(){if(!await popup('ยืนยัน','ยืนยันเพิ่มแผนกใช่หรือไม่?',true))return;api({action:'addDept',username:currentUser.username,value:val('newDept')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok){setVal('newDept','');loadSetup()}popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังเพิ่มแผนก...')}
+async function deleteDept(){if(!await popup('ยืนยัน','ยืนยันลบแผนกใช่หรือไม่?',true))return;api({action:'deleteDept',username:currentUser.username,value:val('deleteDeptSelect')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok)loadSetup();popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังลบแผนก...')}
+
+function handleScanPallet(palletId,target){
+api({action:'getPallet',username:currentUser.username,palletId:palletId},r=>{
+if(!r.ok||!r.pallet){
+autoClosePopup('ไม่พบข้อมูล','ไม่พบข้อมูล PalletID / QR CODE นี้ในระบบ',3000);
+if(target==='issue'){setVal('issuePalletId','');issuePalletInfo.classList.add('hidden');currentIssuePallet=null;}
+if(target==='use'){setVal('usePalletId','');usePalletInfo.classList.add('hidden');calcUseInfo.classList.add('hidden');currentUsePallet=null;}
+return;
+}
+if(target==='issue'){setVal('issuePalletId',palletId);currentIssuePallet=r.pallet;issuePalletInfo.classList.remove('hidden');issuePalletInfo.innerHTML=`<div style="font-size:22px;color:#facc15">${r.pallet.type}</div>น้ำหนักคงเหลือล่าสุด: <span class="bigKg">${nf(r.pallet.remainingKG)} KG</span><br>น้ำหนักตั้งต้นครั้งแรก: <b>${nf(r.pallet.originalKG)} KG</b><br>แผนกปัจจุบัน: <b>${r.pallet.currentDept}</b><br>สถานะ: <b>${r.pallet.status}</b>`;}
+if(target==='use'){setVal('usePalletId',palletId);currentUsePallet=r.pallet;usePalletInfo.classList.remove('hidden');usePalletInfo.innerHTML=`<div style="font-size:22px;color:#facc15">${r.pallet.type}</div>น้ำหนักคงเหลือล่าสุด: <span class="bigKg">${nf(r.pallet.remainingKG)} KG</span><br>น้ำหนักตั้งต้นครั้งแรก: <b>${nf(r.pallet.originalKG)} KG</b><br>แผนก: ${r.pallet.currentDept}<br>สถานะ: ${r.pallet.status}`;calcUseFromRemain();}
+},'กำลังตรวจสอบ QR CODE...');
+}
+function startIssueScan(){readerIssue.classList.remove('hidden');if(!html5QrCodeIssue)html5QrCodeIssue=new Html5Qrcode('readerIssue');html5QrCodeIssue.start({facingMode:'environment'},{fps:10,qrbox:250},t=>{stopIssueScan();handleScanPallet(t,'issue')});isIssueScanning=true}
+function stopIssueScan(){if(html5QrCodeIssue&&isIssueScanning)html5QrCodeIssue.stop();isIssueScanning=false;readerIssue.classList.add('hidden')}
+function startUseScan(){readerUse.classList.remove('hidden');if(!html5QrCodeUse)html5QrCodeUse=new Html5Qrcode('readerUse');html5QrCodeUse.start({facingMode:'environment'},{fps:10,qrbox:250},t=>{stopUseScan();handleScanPallet(t,'use')});isUseScanning=true}
+function stopUseScan(){if(html5QrCodeUse&&isUseScanning)html5QrCodeUse.stop();isUseScanning=false;readerUse.classList.add('hidden')}
+
+function exportExcel(){
+if(!lastReportData){popup('แจ้งเตือน','กรุณาสร้างรายงานก่อน Export Excel');return;}
+const selected=val('exportReportType');
+const wb=XLSX.utils.book_new();
+if(selected==='ALL'||selected==='SUMMARY')addStyledSheet(wb,'สรุปตามประเภทงาน',['ประเภท','สร้าง KG','ใช้ KG','WI KG','พาเลท','Balance'],(lastReportData.summary||[]).map(x=>[x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.pallet),num(x.balance)]),[1,2,3,4,5]);
+if(selected==='ALL'||selected==='USE_SAP')addStyledSheet(wb,'รายงานใช้จริงเข้า SAP',['วันที่','PalletID','ประเภท','ใช้ KG','แผนก','ผู้ทำ','Remark'],(lastReportData.useSAP||[]).map(x=>[x.date,x.palletId,x.type,num(x.useKG),x.dept,x.user,x.remark||'']),[3]);
+if(selected==='ALL'||selected==='WI')addStyledSheet(wb,'WI คงเหลือ',['PalletID','Type','KG','Dept','Status','Remark'],(lastReportData.wiRemain||[]).map(x=>[x.palletId,x.type,num(x.remainingKG),x.currentDept,x.status,x.remark||'']),[2]);
+if(selected==='ALL'||selected==='TRACE')addStyledSheet(wb,'Trace Balance',['RootID','Type','Create KG','Use KG','WI','Balance','Status','Remark'],(lastReportData.trace||[]).map(x=>[x.rootId,x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.balance),x.status,x.remark||'']),[2,3,4,5]);
+const name='EXCESS_SHEET_REPORT_'+todayTHDateTime().replace(/[/: ]/g,'-')+'.xlsx';
+XLSX.writeFile(wb,name);
+}
+function addStyledSheet(wb,name,headers,rows,totalCols){
+const aoa=[];
+aoa.push(['Excess sheet management program (โปรแกรมจัดการ SHEET เกิน)']);
+aoa.push(['วันที่สร้างรายงาน',todayTHDateTime()]);
+aoa.push(['ผู้สร้างรายงาน',currentUser?.name||'']);
+aoa.push([]);
+aoa.push(headers);
+rows.forEach(r=>aoa.push(r));
+if(rows.length){
+const totalRow=headers.map((h,i)=>{
+if(i===0)return 'รวมทั้งหมด';
+if(totalCols.includes(i))return rows.reduce((a,r)=>a+num(r[i]),0);
+return '';
+});
+aoa.push(totalRow);
+}
+const ws=XLSX.utils.aoa_to_sheet(aoa);
+const range=XLSX.utils.decode_range(ws['!ref']);
+ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:headers.length-1}}];
+ws['!cols']=headers.map((h,i)=>({wch:Math.max(14,String(h).length+8)}));
+ws['!pageSetup']={orientation:'landscape',fitToWidth:1,fitToHeight:0};
+for(let R=0;R<=range.e.r;R++){
+for(let C=0;C<=range.e.c;C++){
+const cellRef=XLSX.utils.encode_cell({r:R,c:C});
+if(!ws[cellRef])continue;
+ws[cellRef].s={
+font:{name:'Tahoma',sz:R===0?18:12,bold:R===0||R===4||R===range.e.r,color:{rgb:(R===4||R===0)?'FFFFFF':'000000'}},
+alignment:{horizontal:R===0?'center':'center',vertical:'center',wrapText:true},
+border:{top:{style:'thin',color:{rgb:'999999'}},bottom:{style:'thin',color:{rgb:'999999'}},left:{style:'thin',color:{rgb:'999999'}},right:{style:'thin',color:{rgb:'999999'}}},
+fill:{fgColor:{rgb:R===0?'0F172A':R===4?'15803D':R===range.e.r?'FACC15':'FFFFFF'}}
+};
+if(typeof ws[cellRef].v==='number')ws[cellRef].z='#,##0';
+}
+}
+XLSX.utils.book_append_sheet(wb,ws,name.substring(0,31));
+}
+</script>
+</body>
+</html>
