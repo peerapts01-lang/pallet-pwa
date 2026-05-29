@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -72,7 +71,7 @@ tfoot td,.totalRow td{background:#111827!important;color:#facc15!important;font-
 .reportBlue{background:#2563eb}.reportOrange{background:#ea580c}.reportGreen{background:#16a34a}.reportPurple{background:#6d28d9}
 .reportBox{border-radius:14px;padding:10px;margin-top:8px;overflow:auto}
 .boxBlue table th{background:#1d4ed8}.boxOrange table th{background:#c2410c}.boxGreen table th{background:#15803d}.boxPurple table th{background:#581c87}
-canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-height:380px}
+canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-height:520px}
 .labelBox{background:#fff;color:#111;width:105mm;min-height:145mm;border:3px solid #111;text-align:center;padding:8mm;margin:16px auto;page-break-after:always}
 .labelTypeText{font-size:25px;font-weight:900;margin-top:6px}.labelTypeValue{font-size:42px;font-weight:900;line-height:1.05}
 .labelKgTitle{font-size:22px;font-weight:900;margin-top:8px}.labelKgValue{font-size:54px;font-weight:900;line-height:1}
@@ -93,9 +92,10 @@ canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-heig
 body *{visibility:hidden}
 #printArea,#printArea *,#printAreaUse,#printAreaUse *,#printAreaReprint,#printAreaReprint *{visibility:visible}
 #printArea,#printAreaUse,#printAreaReprint{position:absolute;left:0;top:0;width:210mm;background:#fff}
-#labelPreview,#labelPreviewUse,#labelPreviewReprint{width:210mm;display:block;padding-top:80mm;overflow:visible}
-.labelBox{width:150mm;min-height:145mm;margin:0 auto 20mm auto;padding:8mm;border:3px solid #111}
-.customerLabel{min-height:165mm;margin-bottom:12mm}
+#labelPreview,#labelPreviewUse,#labelPreviewReprint{width:210mm;display:block;padding-top:0;overflow:visible}
+.labelBox{width:150mm;min-height:145mm;margin:80mm auto 0 auto;padding:8mm;border:3px solid #111;page-break-after:always;break-after:page}
+.labelBox:last-child{page-break-after:auto;break-after:auto}
+.customerLabel{min-height:165mm;margin-bottom:0}
 .labelBox img{width:46mm;height:46mm}.pid{font-size:34px}.labelKgValue{font-size:62px}
 .customerLabel .customerQtyLine{font-size:21px}
 .noPrint{display:none!important}
@@ -887,7 +887,7 @@ return html;
 function drawChart(rows){
 let c=chartCanvas,ctx=c.getContext('2d');
 c.width=c.clientWidth;
-c.height=460;
+c.height=540;
 ctx.clearRect(0,0,c.width,c.height);
 
 const wiColors=[
@@ -895,99 +895,73 @@ const wiColors=[
 '#14b8a6','#eab308','#ec4899','#38bdf8',
 '#84cc16','#a855f7','#f43f5e','#0ea5e9'
 ];
-
 const useColor='#ff7a18';
 
-let max=Math.max(
-...rows.map(r=>num(r.useKG||0)),
-...rows.map(r=>num(r.wiKG||0)),
-1
-);
+let max=Math.max(...rows.map(r=>num(r.useKG||0)),...rows.map(r=>num(r.wiKG||0)),1);
+let x=65,baseY=420,barW=42,gapGroup=80,gapBar=14;
 
-let x=55,baseY=350,barW=38,gapGroup=72,gapBar=12;
-
+ctx.textAlign='left';
 ctx.font='bold 28px Arial';
 ctx.fillStyle='#fff';
 ctx.fillText('กราฟเปรียบเทียบยอดใช้จริง KG กับ WI คงเหลือ KG ตามประเภทงาน',30,42);
 
-ctx.font='bold 18px Arial';
+ctx.font='bold 19px Arial';
 ctx.fillStyle=useColor;
-ctx.fillText('■ ใช้จริง KG',34,78);
+ctx.fillText('■ ใช้จริง KG',34,86);
 ctx.fillStyle='#60a5fa';
-ctx.fillText('■ WI คงเหลือ KG',180,78);
+ctx.fillText('■ WI คงเหลือ KG',220,86);
 
-rows.forEach((r,i)=>{
-let useVal=num(r.useKG||0);
-let wiVal=num(r.wiKG||0);
-
-let useH=(useVal/max)*250;
-let wiH=(wiVal/max)*250;
-
-let wiColor=wiColors[i%wiColors.length];
-
-draw3DBar(ctx,x,baseY-useH,barW,useH,useColor);
-draw3DBar(ctx,x+barW+gapBar,baseY-wiH,barW,wiH,wiColor);
-
-ctx.fillStyle='#fff';
-ctx.font='bold 17px Arial';
-ctx.textAlign='center';
-ctx.fillText(nf(useVal),x+(barW/2),baseY-useH-12);
-ctx.fillText(nf(wiVal),x+barW+gapBar+(barW/2),baseY-wiH-12);
-
-ctx.font='bold 16px Arial';
-ctx.fillText('ใช้',x+(barW/2),baseY+24);
-ctx.fillText('WI',x+barW+gapBar+(barW/2),baseY+24);
-
-ctx.font='bold 16px Arial';
-ctx.fillStyle='#ffffff';
-let label=String(r.type||'').slice(0,14);
-ctx.fillText(label,x+barW+4,baseY+52);
-ctx.textAlign='left';
-
-x+=barW*2+gapBar+gapGroup;
-});
-}
-
-function draw3DBar(ctx,x,y,w,h,color){
+function bar3d(x,y,w,h,color,label,value){
+let x3=x+8,y3=y-10;
 if(h<=0){
   ctx.fillStyle='rgba(255,255,255,.35)';
   ctx.beginPath();
   ctx.moveTo(x,y);
-  ctx.lineTo(x+8,y-10);
-  ctx.lineTo(x+w+8,y-10);
+  ctx.lineTo(x3,y3);
+  ctx.lineTo(x3+w,y3);
   ctx.lineTo(x+w,y);
   ctx.closePath();
   ctx.fill();
-  return;
+}else{
+  let grad=ctx.createLinearGradient(x,y,x+w,y+h);
+  grad.addColorStop(0,color);
+  grad.addColorStop(1,'#0f172a');
+  ctx.fillStyle='rgba(0,0,0,.35)';
+  ctx.fillRect(x+8,y+8,w,h);
+  ctx.fillStyle=grad;
+  ctx.fillRect(x,y,w,h);
+  ctx.fillStyle='rgba(255,255,255,.28)';
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x3,y3);ctx.lineTo(x3+w,y3);ctx.lineTo(x+w,y);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.28)';
+  ctx.beginPath();ctx.moveTo(x+w,y);ctx.lineTo(x3+w,y3);ctx.lineTo(x3+w,y3+h);ctx.lineTo(x+w,y+h);ctx.closePath();ctx.fill();
+}
+ctx.fillStyle='#fff';
+ctx.font='bold 18px Arial';
+ctx.textAlign='center';
+ctx.fillText(nf(value),x+w/2,y-16);
+ctx.font='bold 17px Arial';
+ctx.fillText(label,x+w/2,baseY+28);
+ctx.textAlign='left';
 }
 
-ctx.fillStyle='rgba(0,0,0,.35)';
-ctx.fillRect(x+8,y+8,w,h);
+rows.forEach((r,i)=>{
+let useVal=num(r.useKG||0),wiVal=num(r.wiKG||0);
+let useH=(useVal/max)*260,wiH=(wiVal/max)*260;
+let wiColor=wiColors[i%wiColors.length];
 
-let grad=ctx.createLinearGradient(x,y,x+w,y+h);
-grad.addColorStop(0,color);
-grad.addColorStop(1,'#111827');
+bar3d(x,baseY-useH,barW,useH,useColor,'ใช้',useVal);
+bar3d(x+barW+gapBar,baseY-wiH,barW,wiH,wiColor,'WI',wiVal);
 
-ctx.fillStyle=grad;
-ctx.fillRect(x,y,w,h);
+ctx.fillStyle='#fff';
+ctx.font='bold 17px Arial';
+ctx.textAlign='center';
+let typeName=String(r.type||'-');
+ctx.fillText(typeName.length>16?typeName.slice(0,16)+'…':typeName,x+barW+7,baseY+58);
+ctx.textAlign='left';
 
-ctx.fillStyle='rgba(255,255,255,.28)';
-ctx.beginPath();
-ctx.moveTo(x,y);
-ctx.lineTo(x+8,y-10);
-ctx.lineTo(x+w+8,y-10);
-ctx.lineTo(x+w,y);
-ctx.closePath();
-ctx.fill();
-
-ctx.fillStyle='rgba(0,0,0,.28)';
-ctx.beginPath();
-ctx.moveTo(x+w,y);
-ctx.lineTo(x+w+8,y-10);
-ctx.lineTo(x+w+8,y+h-10);
-ctx.lineTo(x+w,y+h);
-ctx.closePath();
-ctx.fill();
+x+=barW*2+gapBar+gapGroup;
+});
+ctx.textAlign='left';
 }
 
 function clearReportScreen(){
