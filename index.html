@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -71,7 +72,7 @@ tfoot td,.totalRow td{background:#111827!important;color:#facc15!important;font-
 .reportBlue{background:#2563eb}.reportOrange{background:#ea580c}.reportGreen{background:#16a34a}.reportPurple{background:#6d28d9}
 .reportBox{border-radius:14px;padding:10px;margin-top:8px;overflow:auto}
 .boxBlue table th{background:#1d4ed8}.boxOrange table th{background:#c2410c}.boxGreen table th{background:#15803d}.boxPurple table th{background:#581c87}
-canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-height:520px}
+canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-height:380px}
 .labelBox{background:#fff;color:#111;width:105mm;min-height:145mm;border:3px solid #111;text-align:center;padding:8mm;margin:16px auto;page-break-after:always}
 .labelTypeText{font-size:25px;font-weight:900;margin-top:6px}.labelTypeValue{font-size:42px;font-weight:900;line-height:1.05}
 .labelKgTitle{font-size:22px;font-weight:900;margin-top:8px}.labelKgValue{font-size:54px;font-weight:900;line-height:1}
@@ -92,10 +93,9 @@ canvas{background:#0f172a;border-radius:12px;margin-top:10px;width:100%;max-heig
 body *{visibility:hidden}
 #printArea,#printArea *,#printAreaUse,#printAreaUse *,#printAreaReprint,#printAreaReprint *{visibility:visible}
 #printArea,#printAreaUse,#printAreaReprint{position:absolute;left:0;top:0;width:210mm;background:#fff}
-#labelPreview,#labelPreviewUse,#labelPreviewReprint{width:210mm;display:block;padding-top:0;overflow:visible}
-.labelBox{width:150mm;min-height:145mm;margin:80mm auto 0 auto;padding:8mm;border:3px solid #111;page-break-after:always;break-after:page}
-.labelBox:last-child{page-break-after:auto;break-after:auto}
-.customerLabel{min-height:165mm;margin-bottom:0}
+#labelPreview,#labelPreviewUse,#labelPreviewReprint{width:210mm;display:block;padding-top:80mm;overflow:visible}
+.labelBox{width:150mm;min-height:145mm;margin:0 auto 20mm auto;padding:8mm;border:3px solid #111}
+.customerLabel{min-height:165mm;margin-bottom:12mm}
 .labelBox img{width:46mm;height:46mm}.pid{font-size:34px}.labelKgValue{font-size:62px}
 .customerLabel .customerQtyLine{font-size:21px}
 .noPrint{display:none!important}
@@ -305,7 +305,7 @@ body *{visibility:hidden}
   <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
   <div id="useMsg" class="msg"></div>
   <div id="printAreaUse"><div id="labelPreviewUse"></div></div>
-  <button class="btn green" onclick="window.print()">พิมพ์ป้าย WI</button>
+  <button class="btn green" onclick="printLabelPreview('labelPreviewUse')">พิมพ์ป้าย WI</button>
 </div>
 
 <div id="reprintView" class="card hidden subview">
@@ -316,7 +316,7 @@ body *{visibility:hidden}
   <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
   <div id="reprintInfo" class="infoBox hidden"></div>
   <div id="printAreaReprint"><div id="labelPreviewReprint"></div></div>
-  <button class="btn green" onclick="window.print()">พิมพ์ป้ายเดิมอีกครั้ง</button>
+  <button class="btn green" onclick="printLabelPreview('labelPreviewReprint')">พิมพ์ป้ายเดิมอีกครั้ง</button>
 </div>
 
 <div id="adminView" class="card hidden subview">
@@ -624,12 +624,43 @@ renderKgInputs()
 }
 
 function renderPrintSelector(pallets){printSelectList.innerHTML=(pallets||[]).map(p=>`<label class="printSelectLine"><input type="checkbox" class="printChk" value="${p.palletId}" checked> ${p.palletId} | ${p.type} | ${nf(p.kg||p.remainingKG||p.originalKG)} KG</label>`).join('')}
-function printAllLabels(){document.querySelectorAll('.labelBox').forEach(x=>x.classList.remove('hidden'));window.print()}
+function getPrintCss(){
+return `<style>
+@page{size:A4 portrait;margin:0}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;font-family:Arial,Tahoma,sans-serif;color:#111}
+.labelPrintPage{width:210mm;height:297mm;padding-top:80mm;background:#fff;page-break-after:always;break-after:page;overflow:hidden}
+.labelPrintPage:last-child{page-break-after:auto;break-after:auto}
+.labelBox{background:#fff;color:#111;width:150mm;min-height:145mm;border:3px solid #111;text-align:center;padding:8mm;margin:0 auto;page-break-after:auto!important;break-after:auto!important}
+.customerLabel{min-height:165mm}
+.labelTypeText{font-size:25px;font-weight:900;margin-top:6px}.labelTypeValue{font-size:42px;font-weight:900;line-height:1.05}
+.labelKgTitle{font-size:22px;font-weight:900;margin-top:8px}.labelKgValue{font-size:62px;font-weight:900;line-height:1}
+.labelBox img{width:46mm;height:46mm;margin-top:6px}.pid{font-size:34px;font-weight:900;margin-top:6px}
+.labelMeta{font-size:17px;font-weight:800;margin-top:4px}.labelMetaSmall{font-size:14px;font-weight:700;margin-top:3px}
+.customerLabelTitle{font-size:30px;font-weight:900;margin-bottom:4px}.customerName{font-size:24px;font-weight:900;line-height:1.15;margin:4px 0}
+.labelDetail{font-size:16px;font-weight:800;margin-top:3px}
+.customerLabel .customerQtyLine{font-size:21px;font-weight:900;margin:7px 0;color:#111}
+.customerLabel .customerOrderLine{font-size:17px;font-weight:900;margin:4px 0;color:#111}
+</style>`;
+}
+function printLabelBoxes(boxes){
+const arr=Array.from(boxes||[]).filter(x=>x&&!x.classList.contains('hidden'));
+if(!arr.length){popup('แจ้งเตือน','ไม่พบป้ายสำหรับพิมพ์');return;}
+const w=window.open('','_blank','width=900,height=700');
+const pages=arr.map(x=>`<div class="labelPrintPage">${x.outerHTML}</div>`).join('');
+w.document.open();
+w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>Print Label</title>${getPrintCss()}</head><body>${pages}<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},250)}<\/script></body></html>`);
+w.document.close();
+}
+function printLabelPreview(previewId){
+const area=document.getElementById(previewId);
+printLabelBoxes(area?area.querySelectorAll('.labelBox'):[]);
+}
+function printAllLabels(){printLabelPreview('labelPreview')}
 function printSelectedLabels(){
 const selected=Array.from(document.querySelectorAll('.printChk:checked')).map(x=>x.value);
-document.querySelectorAll('.labelBox').forEach(x=>x.classList.toggle('hidden',!selected.includes(x.dataset.pid)));
-window.print();
-setTimeout(()=>document.querySelectorAll('.labelBox').forEach(x=>x.classList.remove('hidden')),500)
+const boxes=Array.from(document.querySelectorAll('#labelPreview .labelBox')).filter(x=>selected.includes(x.dataset.pid));
+printLabelBoxes(boxes);
 }
 function renderMultiLabels(pallets,id){document.getElementById(id).innerHTML=(pallets||[]).map(p=>labelHtml(p)).join('')}
 function renderLabel(p,id){document.getElementById(id).innerHTML=labelHtml(p)}
@@ -887,7 +918,7 @@ return html;
 function drawChart(rows){
 let c=chartCanvas,ctx=c.getContext('2d');
 c.width=c.clientWidth;
-c.height=540;
+c.height=460;
 ctx.clearRect(0,0,c.width,c.height);
 
 const wiColors=[
@@ -895,73 +926,99 @@ const wiColors=[
 '#14b8a6','#eab308','#ec4899','#38bdf8',
 '#84cc16','#a855f7','#f43f5e','#0ea5e9'
 ];
+
 const useColor='#ff7a18';
 
-let max=Math.max(...rows.map(r=>num(r.useKG||0)),...rows.map(r=>num(r.wiKG||0)),1);
-let x=65,baseY=420,barW=42,gapGroup=80,gapBar=14;
+let max=Math.max(
+...rows.map(r=>num(r.useKG||0)),
+...rows.map(r=>num(r.wiKG||0)),
+1
+);
 
-ctx.textAlign='left';
+let x=55,baseY=350,barW=38,gapGroup=72,gapBar=12;
+
 ctx.font='bold 28px Arial';
 ctx.fillStyle='#fff';
 ctx.fillText('กราฟเปรียบเทียบยอดใช้จริง KG กับ WI คงเหลือ KG ตามประเภทงาน',30,42);
 
-ctx.font='bold 19px Arial';
-ctx.fillStyle=useColor;
-ctx.fillText('■ ใช้จริง KG',34,86);
-ctx.fillStyle='#60a5fa';
-ctx.fillText('■ WI คงเหลือ KG',220,86);
-
-function bar3d(x,y,w,h,color,label,value){
-let x3=x+8,y3=y-10;
-if(h<=0){
-  ctx.fillStyle='rgba(255,255,255,.35)';
-  ctx.beginPath();
-  ctx.moveTo(x,y);
-  ctx.lineTo(x3,y3);
-  ctx.lineTo(x3+w,y3);
-  ctx.lineTo(x+w,y);
-  ctx.closePath();
-  ctx.fill();
-}else{
-  let grad=ctx.createLinearGradient(x,y,x+w,y+h);
-  grad.addColorStop(0,color);
-  grad.addColorStop(1,'#0f172a');
-  ctx.fillStyle='rgba(0,0,0,.35)';
-  ctx.fillRect(x+8,y+8,w,h);
-  ctx.fillStyle=grad;
-  ctx.fillRect(x,y,w,h);
-  ctx.fillStyle='rgba(255,255,255,.28)';
-  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x3,y3);ctx.lineTo(x3+w,y3);ctx.lineTo(x+w,y);ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(0,0,0,.28)';
-  ctx.beginPath();ctx.moveTo(x+w,y);ctx.lineTo(x3+w,y3);ctx.lineTo(x3+w,y3+h);ctx.lineTo(x+w,y+h);ctx.closePath();ctx.fill();
-}
-ctx.fillStyle='#fff';
 ctx.font='bold 18px Arial';
-ctx.textAlign='center';
-ctx.fillText(nf(value),x+w/2,y-16);
-ctx.font='bold 17px Arial';
-ctx.fillText(label,x+w/2,baseY+28);
-ctx.textAlign='left';
-}
+ctx.fillStyle=useColor;
+ctx.fillText('■ ใช้จริง KG',34,78);
+ctx.fillStyle='#60a5fa';
+ctx.fillText('■ WI คงเหลือ KG',180,78);
 
 rows.forEach((r,i)=>{
-let useVal=num(r.useKG||0),wiVal=num(r.wiKG||0);
-let useH=(useVal/max)*260,wiH=(wiVal/max)*260;
+let useVal=num(r.useKG||0);
+let wiVal=num(r.wiKG||0);
+
+let useH=(useVal/max)*250;
+let wiH=(wiVal/max)*250;
+
 let wiColor=wiColors[i%wiColors.length];
 
-bar3d(x,baseY-useH,barW,useH,useColor,'ใช้',useVal);
-bar3d(x+barW+gapBar,baseY-wiH,barW,wiH,wiColor,'WI',wiVal);
+draw3DBar(ctx,x,baseY-useH,barW,useH,useColor);
+draw3DBar(ctx,x+barW+gapBar,baseY-wiH,barW,wiH,wiColor);
 
 ctx.fillStyle='#fff';
 ctx.font='bold 17px Arial';
 ctx.textAlign='center';
-let typeName=String(r.type||'-');
-ctx.fillText(typeName.length>16?typeName.slice(0,16)+'…':typeName,x+barW+7,baseY+58);
+ctx.fillText(nf(useVal),x+(barW/2),baseY-useH-12);
+ctx.fillText(nf(wiVal),x+barW+gapBar+(barW/2),baseY-wiH-12);
+
+ctx.font='bold 16px Arial';
+ctx.fillText('ใช้',x+(barW/2),baseY+24);
+ctx.fillText('WI',x+barW+gapBar+(barW/2),baseY+24);
+
+ctx.font='bold 16px Arial';
+ctx.fillStyle='#ffffff';
+let label=String(r.type||'').slice(0,14);
+ctx.fillText(label,x+barW+4,baseY+52);
 ctx.textAlign='left';
 
 x+=barW*2+gapBar+gapGroup;
 });
-ctx.textAlign='left';
+}
+
+function draw3DBar(ctx,x,y,w,h,color){
+if(h<=0){
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+8,y-10);
+  ctx.lineTo(x+w+8,y-10);
+  ctx.lineTo(x+w,y);
+  ctx.closePath();
+  ctx.fill();
+  return;
+}
+
+ctx.fillStyle='rgba(0,0,0,.35)';
+ctx.fillRect(x+8,y+8,w,h);
+
+let grad=ctx.createLinearGradient(x,y,x+w,y+h);
+grad.addColorStop(0,color);
+grad.addColorStop(1,'#111827');
+
+ctx.fillStyle=grad;
+ctx.fillRect(x,y,w,h);
+
+ctx.fillStyle='rgba(255,255,255,.28)';
+ctx.beginPath();
+ctx.moveTo(x,y);
+ctx.lineTo(x+8,y-10);
+ctx.lineTo(x+w+8,y-10);
+ctx.lineTo(x+w,y);
+ctx.closePath();
+ctx.fill();
+
+ctx.fillStyle='rgba(0,0,0,.28)';
+ctx.beginPath();
+ctx.moveTo(x+w,y);
+ctx.lineTo(x+w+8,y-10);
+ctx.lineTo(x+w+8,y+h-10);
+ctx.lineTo(x+w,y+h);
+ctx.closePath();
+ctx.fill();
 }
 
 function clearReportScreen(){
