@@ -389,7 +389,31 @@ body *{visibility:hidden}
     <div id="useSection"><h2 class="reportTitle reportOrange">🟧 รายงานการใช้จริงเข้า SAP</h2><div id="useDetailTable" class="reportBox boxOrange"></div></div>
     <div id="wiSection"><h2 class="reportTitle reportGreen">🟩 WI คงเหลือ</h2><div id="wiTable" class="reportBox boxGreen"></div></div>
     <div id="traceSection"><h2 class="reportTitle reportPurple">🟪 Trace / Balance</h2><div id="traceTable" class="reportBox boxPurple"></div></div>
-    <div id="customerStockSection"><h2 class="reportTitle reportBlue">🟦 Stock Matching ลูกค้า</h2><div class="infoBox">สำหรับวางแผนดูแผ่นงานลูกค้าคงเหลือ เพื่อจับคู่กับ Order รอบถัดไป โดยยังนับเป็น WI ตามระบบเดิม</div><div id="customerStockTable" class="reportBox boxBlue"></div></div>
+    
+<div class="searchMini" id="stockMatchingFilterBox">
+  <h3>🔎 Filter Stock Matching</h3>
+  <div class="formRow">
+    <div class="formField">
+      <label>Flute</label>
+      <input id="sm_flute" placeholder="เช่น B">
+    </div>
+    <div class="formField">
+      <label>Board / Grade</label>
+      <input id="sm_board" placeholder="KS170/CSP150">
+    </div>
+    <div class="formField">
+      <label>Size</label>
+      <input id="sm_size" placeholder="696x682">
+    </div>
+    <div class="formField">
+      <label>Pallet ID</label>
+      <input id="sm_pid" placeholder="PLT-...">
+    </div>
+  </div>
+  <button class="btn blue" onclick="filterStockMatching()">ค้นหา</button>
+  <button class="btn gray" onclick="resetStockMatching()">ล้าง</button>
+</div>
+<div id="customerStockSection"><h2 class="reportTitle reportBlue">🟦 Stock Matching ลูกค้า</h2><div class="infoBox">สำหรับวางแผนดูแผ่นงานลูกค้าคงเหลือ เพื่อจับคู่กับ Order รอบถัดไป โดยยังนับเป็น WI ตามระบบเดิม</div><div id="customerStockTable" class="reportBox boxBlue"></div></div>
   </div>
 </div>
 </div>
@@ -1348,6 +1372,38 @@ return asc?A.localeCompare(B):B.localeCompare(A);
 rows.forEach(r=>table.querySelector("tbody").appendChild(r));
 };
 });
+}
+
+
+function filterStockMatching(){
+  const f=(document.getElementById('sm_flute')?.value||'').toLowerCase();
+  const b=(document.getElementById('sm_board')?.value||'').toLowerCase();
+  const s=(document.getElementById('sm_size')?.value||'').toLowerCase();
+  const p=(document.getElementById('sm_pid')?.value||'').toLowerCase();
+
+  const table=document.querySelector('#customerStockTable table');
+  if(!table) return;
+
+  const rows=[...table.querySelectorAll('tbody tr')];
+
+  rows.forEach(r=>{
+    const t=r.innerText.toLowerCase();
+    const ok=
+      (!f || t.includes(f)) &&
+      (!b || t.includes(b)) &&
+      (!s || t.includes(s)) &&
+      (!p || t.includes(p));
+
+    r.style.display = ok ? '' : 'none';
+  });
+}
+
+function resetStockMatching(){
+  ['sm_flute','sm_board','sm_size','sm_pid'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  filterStockMatching();
 }
 
 </script>
