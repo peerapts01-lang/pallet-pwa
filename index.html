@@ -139,7 +139,51 @@ body *{visibility:hidden}
   table tr { page-break-inside: avoid; }
 }
 
+
+/* ===== SCORE GRID FIX ===== */
+.scoreGridFix{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+@media(max-width:900px){
+  .scoreGridFix{grid-template-columns:repeat(2,1fr);}
+}
+
+
+/* ===== CUSTOMER STOCK MATCHING FILTER + TABLE FINAL SAFE FIX ===== */
+.smFilterGrid{display:flex;gap:14px;align-items:end;flex-wrap:wrap;}
+.smField{flex:0 0 auto;min-width:0;}
+.smField label{font-size:17px;margin-top:8px;margin-bottom:6px;}
+.smField input{width:100%;height:44px;padding:9px 12px;font-size:15px;}
+.smField.smPid{width:170px;}
+.smField.smPc{width:185px;}
+.smField.smMat{width:185px;}
+.smField.smFlute{width:105px;}
+.smField.smBoard{width:360px;}
+.smField.smSize{width:145px;}
+#stockMatchingFilterBox{overflow-x:auto;}
+#customerStockTable{overflow-x:auto;padding-bottom:10px;}
+#customerStockTable table{width:max-content;min-width:100%;table-layout:auto;}
+#customerStockTable th,#customerStockTable td{white-space:nowrap;word-break:normal;overflow-wrap:normal;padding:10px 14px;line-height:1.25;vertical-align:middle;}
+#customerStockTable th:nth-child(1),#customerStockTable td:nth-child(1){min-width:150px;}
+#customerStockTable th:nth-child(2),#customerStockTable td:nth-child(2){min-width:115px;}
+#customerStockTable th:nth-child(3),#customerStockTable td:nth-child(3){min-width:155px;}
+#customerStockTable th:nth-child(4),#customerStockTable td:nth-child(4){min-width:155px;}
+#customerStockTable th:nth-child(5),#customerStockTable td:nth-child(5){min-width:260px;white-space:normal;}
+#customerStockTable th:nth-child(6),#customerStockTable td:nth-child(6){min-width:150px;white-space:normal;}
+#customerStockTable th:nth-child(9),#customerStockTable td:nth-child(9){min-width:130px;}
+#customerStockTable th:nth-child(11),#customerStockTable td:nth-child(11){min-width:260px;white-space:normal;}
+#customerStockTable th:nth-child(27),#customerStockTable td:nth-child(27){min-width:180px;white-space:normal;}
+@media(max-width:900px){.smFilterGrid{flex-wrap:wrap}.smField.smBoard{width:100%;max-width:420px}}
+
 </style>
+
+<style>
+#board{width:100%;min-width:340px;}
+#flute{width:80px !important;}
+</style>
+
 </head>
 
 <body>
@@ -235,7 +279,7 @@ body *{visibility:hidden}
     <div class="formRow">
       <div class="formField"><label>Flute</label><select id="flute" onchange="calcOrderFromHeight();autoCalcCustomerPallets()"><option value="">-- เลือกลอน --</option><option>A</option><option>B</option><option>C</option><option>BC</option></select></div>
       <div class="formField"><label>Board</label><input id="board"></div>
-      <div class="formField"><label>Weight_Box <span style="color:#facc15">(บังคับ)</span></label><input id="weightBox" type="number" step="0.0001" oninput="autoCalcCustomerPallets()"></div>
+      <div class="formField"><label>Weight_Box</label><input id="weightBox" type="number" step="0.0001" oninput="autoCalcCustomerPallets()"></div>
       <div class="formField"><label>Weight_Sh <span style="color:#facc15">(บังคับ)</span></label><input id="weightSh" type="number" step="0.0001" oninput="autoCalcCustomerPallets()" placeholder="น้ำหนักต่อ 1 แผ่น"></div>
     </div>
 
@@ -246,7 +290,19 @@ body *{visibility:hidden}
       <div class="formField"><label>หน่วย ORDER</label><select id="orderUnit" onchange="calcOrderFromHeight();autoCalcCustomerPallets()"><option>กล่อง</option><option>แผ่น</option></select></div>
     </div>
     <div id="sheetPerInchInfo" class="infoBox hidden"></div>
+  
+<div class="card" id="scoreBlock">
+  <h3>Score W1 - W5</h3>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+    <div><label>W1</label><input id="scoreW1" type="number"></div>
+    <div><label>W2</label><input id="scoreW2" type="number"></div>
+    <div><label>W3</label><input id="scoreW3" type="number"></div>
+    <div><label>W4</label><input id="scoreW4" type="number"></div>
+    <div><label>W5</label><input id="scoreW5" type="number"></div>
   </div>
+</div>
+
+</div>
 
   <label>จำนวนพาเลทที่ต้องการสร้าง</label>
   <input id="createPalletCount" type="number" min="1" max="50" value="1" oninput="renderKgInputs()">
@@ -365,7 +421,14 @@ body *{visibility:hidden}
   <label>ลบแผนก</label><select id="deleteDeptSelect"></select><button class="btn red" onclick="deleteDept()">ลบแผนก</button><hr>
   <button class="btn yellow" onclick="sendAlertNow()">ส่งแจ้งเตือน Stock ต่ำเดี๋ยวนี้</button>
   <button class="btn gray" onclick="backHome()">กลับเมนูหลัก</button>
-  <div id="adminMsg" class="msg"></div>
+  <div id="adminMsg" class="msg">
+
+<hr>
+<label>Flute (เพิ่ม/ลบ ใช้ช่องเดียว)</label>
+<input id="fluteSetting" placeholder="เช่น A / B / C / BC">
+<button class="btn blue" onclick="saveFlute(true)">เพิ่มลอน</button>
+<button class="btn red" onclick="saveFlute(false)">ลบลอน</button>
+</div>
 </div>
 
 <div id="reportView" class="card hidden subview">
@@ -392,22 +455,30 @@ body *{visibility:hidden}
     
 <div class="searchMini" id="stockMatchingFilterBox">
   <h3>🔎 Filter Stock Matching</h3>
-  <div class="formRow">
-    <div class="formField">
-      <label>Flute</label>
-      <input id="sm_flute" placeholder="เช่น B">
-    </div>
-    <div class="formField">
-      <label>Board / Grade</label>
-      <input id="sm_board" placeholder="KS170/CSP150">
-    </div>
-    <div class="formField">
-      <label>Size</label>
-      <input id="sm_size" placeholder="696x682">
-    </div>
-    <div class="formField">
+  <div class="smFilterGrid">
+    <div class="smField smPid">
       <label>Pallet ID</label>
       <input id="sm_pid" placeholder="PLT-...">
+    </div>
+    <div class="smField smPc">
+      <label>PC</label>
+      <input id="sm_pc" placeholder="เช่น 00000">
+    </div>
+    <div class="smField smMat">
+      <label>Material No</label>
+      <input id="sm_material" placeholder="เช่น Z037">
+    </div>
+    <div class="smField smFlute">
+      <label>Flute</label>
+      <input id="sm_flute" placeholder="เช่น C">
+    </div>
+    <div class="smField smBoard">
+      <label>Grade / Board</label>
+      <input id="sm_board" placeholder="เช่น KT125/CS110/CS110 หรือ BC / AB">
+    </div>
+    <div class="smField smSize">
+      <label>Size</label>
+      <input id="sm_size" placeholder="389x883">
     </div>
   </div>
   <button class="btn blue" onclick="filterStockMatching()">ค้นหา</button>
@@ -432,7 +503,7 @@ out.push(text.substring(i,i+12));
 return out;
 }
 >
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby-MyuRQBHzufulUpzMXjhRtC6wj8Nw3BTN6pf6WZL0XGUAl0at2hREaOoEKezHFj0t/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbylTMT4_pGiEI5tqnWCfhyrJfujjWoV4KqacpMBxHHPGBa9_nXD0LVXfjzO0ojmPuPy/exec';
 
 
 let currentUser=null,html5QrCodeUse=null,html5QrCodeIssue=null,isUseScanning=false,isIssueScanning=false,modalResolve=null,currentUsePallet=null,currentIssuePallet=null,suggestTimer=null,jobTimer=null,lastReportData=null,lastCreatedPallets=[],sheetPerInchMap={};
@@ -470,7 +541,14 @@ box.innerHTML=`<div style="background:#111827;border:2px solid #60a5fa;border-ra
 document.body.appendChild(box);
 setTimeout(()=>box.remove(),ms);
 }
-function nf(v){const n=Number(v);if(isNaN(n))return v??'';return n.toLocaleString('en-US')}
+function nf(v){
+const raw=String(v??'').trim();
+if(raw==='')return '';
+const n=Number(raw.replace(/,/g,''));
+if(isNaN(n))return v??'';
+if(Number.isInteger(n))return n.toLocaleString('en-US',{maximumFractionDigits:0});
+return n.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+}
 function fmt3(v){const n=Number(v);if(isNaN(n))return '';return n.toFixed(3)}
 function fmtQty(v){const n=Number(v);if(isNaN(n))return v??'';return Number.isInteger(n)?n.toLocaleString('en-US'):n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function num(v){const n=Number(String(v??0).replace(/,/g,''));return isNaN(n)?0:n}
@@ -559,13 +637,32 @@ fill('deleteTypeSelect',r.types);
 fill('deleteDeptSelect',r.depts);
 reportType.innerHTML='<option value="ทั้งหมด">ทั้งหมด</option>';
 (r.types||[]).forEach(x=>reportType.innerHTML+=`<option>${x}</option>`);
+fillFluteSelect(r.flutes || r.fluteList || r.flutesList || ['A','B','C','BC']);
 sheetPerInchMap = normalizeSheetPerInchMap(r.sheetPerInchMap || r.sheetPerInch || r.perInch || {});
+ensureDefaultSheetPerInch();
 loadSheetPerInchIfNeeded();
 onCreateTypeChange();
 },'กำลังโหลดข้อมูลตั้งค่า...');
 }
 function fill(id,a){let e=document.getElementById(id);e.innerHTML='';(a||[]).forEach(x=>e.innerHTML+=`<option>${x}</option>`)}
 function fillDeptSelect(id,a,first){let e=document.getElementById(id);e.innerHTML=`<option value="">${first}</option>`;(a||[]).forEach(x=>e.innerHTML+=`<option>${x}</option>`)}
+function fillFluteSelect(a){
+const e=document.getElementById('flute');
+if(!e)return;
+const old=e.value;
+const seen={};
+let list=(a||[]).map(x=>String(x||'').trim()).filter(x=>x);
+if(!list.length)list=['A','B','C','BC'];
+list=list.filter(x=>{const k=x.toUpperCase();if(seen[k])return false;seen[k]=true;return true;});
+e.innerHTML='<option value="">-- เลือกลอน --</option>'+list.map(x=>`<option>${x}</option>`).join('');
+if(old&&list.some(x=>String(x).toUpperCase()===String(old).toUpperCase()))e.value=old;
+}
+function ensureDefaultSheetPerInch(){
+if(!sheetPerInchMap || typeof sheetPerInchMap !== 'object') sheetPerInchMap={};
+if(!sheetPerInchMap.B) sheetPerInchMap.B=8;
+if(!sheetPerInchMap.C) sheetPerInchMap.C=6;
+if(!sheetPerInchMap.BC) sheetPerInchMap.BC=4;
+}
 function normalizeSheetPerInchMap(src){
 const out={};
 if(Array.isArray(src)){
@@ -584,9 +681,14 @@ if(Array.isArray(src)){
 return out;
 }
 function loadSheetPerInchIfNeeded(){
-if(Object.keys(sheetPerInchMap).length)return;
+ensureDefaultSheetPerInch();
 api({action:'getSheetPerInch'},r=>{
-  if(r&&r.ok)sheetPerInchMap=normalizeSheetPerInchMap(r.sheetPerInchMap||r.sheetPerInch||r.data||{});
+  if(r&&r.ok){
+    const m=normalizeSheetPerInchMap(r.sheetPerInchMap||r.sheetPerInch||r.data||{});
+    sheetPerInchMap=Object.keys(m).length?m:sheetPerInchMap;
+    ensureDefaultSheetPerInch();
+    calcOrderFromHeight();
+  }
 },'กำลังโหลดจำนวนแผ่นต่อนิ้ว...',false);
 }
 function showView(id){
@@ -595,9 +697,12 @@ mainView.classList.add('hidden');
 if(id==='adminView'&&!isAdmin()){popup('แจ้งเตือน','เมนูนี้สำหรับ ADMIN เท่านั้น');mainView.classList.remove('hidden');return;}
 document.getElementById(id).classList.remove('hidden');
 applyName();
-if(id==='createView'){setVal('createDept','');renderKgInputs();onCreateTypeChange()}
-if(id==='issueView')setVal('issueToDept','');
-if(id==='reportView'){clearReportScreen();setTodayDefaults();changeReportMode()}
+if(id==='createView'){clearCreateForm();setVal('createDept','');renderKgInputs();onCreateTypeChange()}
+if(id==='issueView'){clearIssueForm();setVal('issueToDept','')}
+if(id==='useView'){clearUseForm();clearUseSearch()}
+if(id==='reprintView'){clearReprintForm()}
+if(id==='adminView'){clearAdminForm()}
+if(id==='reportView'){clearReportForm()}
 }
 function backHome(){
 document.querySelectorAll('.subview').forEach(x=>x.classList.add('hidden'));
@@ -638,6 +743,7 @@ const fluteKey=String(val('flute')||'').trim().toUpperCase();
 const sheetPerInch=Number(sheetPerInchMap[String(fluteKey).trim().toUpperCase()]||0);
 if(!inch){
   sheetPerInchInfo.classList.add('hidden');
+  setVal('orderQty','');
   autoCalcCustomerPallets();
   return;
 }
@@ -661,14 +767,18 @@ autoCalcCustomerPallets();
 function autoCalcCustomerPallets(){
 if(val('createType')!=='แผ่นงานลูกค้า')return;
 let order=Number(val('orderQty')||0), count=Number(val('createPalletCount')||1), w=getCustomerUnitWeight();
-if(order<=0||count<=0)return;
-let base=Math.floor(order/count), remain=order-(base*count);
 let qtys=document.querySelectorAll('.qtyEach');
 let kgs=document.querySelectorAll('.kgEach');
+if(order<=0||count<=0){
+  qtys.forEach(x=>x.value='');
+  kgs.forEach(x=>x.value='');
+  return;
+}
+let base=Math.floor(order/count), remain=order-(base*count);
 for(let i=0;i<count;i++){
 let q=base+(i===count-1?remain:0);
 if(qtys[i])qtys[i].value=q;
-if(kgs[i]&&w>0)kgs[i].value=(q*w).toFixed(2)
+if(kgs[i])kgs[i].value=(w>0)?(q*w).toFixed(2):'';
 }
 }
 
@@ -680,30 +790,53 @@ let box=mode==='pc'?jobSuggestPc:jobSuggestMat;
 if(!k){box.classList.add('hidden');return;}
 api({action:'suggestCustomerJobs',keyword:k},r=>{
 let a=r.jobs||[];
-box.innerHTML=a.map(j=>{const wb=fmt3(j.weightBox);const ws=fmt3(j.weightSh??j.weightSheet??j.Weight_Sh);return `<div class="autoItem" onclick='pickCustomerJob(${JSON.stringify(j).replace(/'/g,"&#39;")})'>${j.pc||'-'} | ${j.materialNo||'-'} | ${j.custName||'-'} | Box:${wb||'0.000'} | Sh:${ws||'0.000'}</div>`}).join('');
+box.innerHTML=a.map(j=>{const wb=fmt3(j.weightBox);const ws=fmt3(j.weightSh??j.weightSheet??j.Weight_Sh);const sw=[j.scoreW1,j.scoreW2,j.scoreW3,j.scoreW4,j.scoreW5].map(x=>(x===0||x)?x:'').join('/');return `<div class="autoItem" onclick='pickCustomerJob(${JSON.stringify(j).replace(/'/g,"&#39;")})'>${j.pc||'-'} | ${j.materialNo||'-'} | ${j.custName||'-'} | Box:${wb||'0.000'} | Sh:${ws||'0.000'} | Score:${sw}</div>`}).join('');
 box.classList.toggle('hidden',!a.length);
 },'กำลังค้นหาข้อมูลงานลูกค้า...');
 },150)
 }
+function getScoreValue(j,n){
+const keys=[`scoreW${n}`,`ScoreW${n}`,`SCOREW${n}`,`score${n}`,`Score${n}`,`W${n}`,`w${n}`,`ScoreW_${n}`,`scoreW_${n}`];
+for(const k of keys){
+  if(Object.prototype.hasOwnProperty.call(j,k) && j[k] !== null && j[k] !== undefined && String(j[k]).trim() !== '') return j[k];
+}
+return '';
+}
 function pickCustomerJob(j){
-setVal('pc',j.pc||'');
-setVal('materialNo',j.materialNo||'');
-setVal('custName',j.custName||'');
-setVal('boxType',j.boxType||'');
-setVal('cutSheetWid',j.cutSheetWid||'');
-setVal('cutSheetLeng',j.cutSheetLeng||'');
-setVal('flute',j.flute||'');
-setVal('board',j.board||'');
-setVal('weightBox',fmt3(j.weightBox));
+setVal('pc',j.pc||j.PC||'');
+setVal('materialNo',j.materialNo||j.Material_No||j.material_no||'');
+setVal('custName',j.custName||j.Cust_Name||j.cust_name||'');
+setVal('boxType',j.boxType||j.Box_Type||'');
+setVal('cutSheetWid',j.cutSheetWid||j.CutSheetWid||j.cutWid||'');
+setVal('cutSheetLeng',j.cutSheetLeng||j.CutSheetLeng||j.cutLen||'');
+setVal('flute',j.flute||j.Flute||'');
+setVal('board',j.board||j.Board||'');
+{
+const wbPick=Number(j.weightBox??j.Weight_Box??0);
+setVal('weightBox',wbPick>0?fmt3(wbPick):'');
+}
 setVal('weightSh',fmt3(j.weightSh??j.weightSheet??j.Weight_Sh));
+setVal('scoreW1',getScoreValue(j,1));
+setVal('scoreW2',getScoreValue(j,2));
+setVal('scoreW3',getScoreValue(j,3));
+setVal('scoreW4',getScoreValue(j,4));
+setVal('scoreW5',getScoreValue(j,5));
 jobSuggestPc.classList.add('hidden');
 jobSuggestMat.classList.add('hidden');
+calcOrderFromHeight();
 autoCalcCustomerPallets()
 }
 
 function getKgList(){return Array.from(document.querySelectorAll('.kgEach')).map(x=>Number(x.value||0))}
 function getQtyList(){return Array.from(document.querySelectorAll('.qtyEach')).map(x=>Number(x.value||0))}
-function customerPayload(){return {pc:val('pc'),materialNo:val('materialNo'),custName:val('custName'),boxType:val('boxType'),cutSheetWid:val('cutSheetWid'),cutSheetLeng:val('cutSheetLeng'),flute:val('flute'),board:val('board'),weightBox:val('weightBox'),weightSh:val('weightSh'),stackHeightInch:val('stackHeightInch'),soNo:val('soNo'),orderQty:val('orderQty'),orderUnit:val('orderUnit')}}
+function customerPayload(){
+const wbRaw=val('weightBox');
+const wsRaw=val('weightSh');
+const unit=val('orderUnit');
+// Weight_Box ไม่บังคับ: ถ้าหน่วยเป็นแผ่นและไม่ได้กรอก Weight_Box ให้ส่ง Weight_Sh แทนเพื่อไม่ให้ backend รุ่นเดิมล็อก
+const wbSend=(Number(wbRaw||0)>0)?wbRaw:((unit==='แผ่น'&&Number(wsRaw||0)>0)?wsRaw:'');
+return {pc:val('pc'),materialNo:val('materialNo'),custName:val('custName'),boxType:val('boxType'),cutSheetWid:val('cutSheetWid'),cutSheetLeng:val('cutSheetLeng'),flute:val('flute'),board:val('board'),weightBox:wbSend,weightSh:wsRaw,scoreW1:val('scoreW1'),scoreW2:val('scoreW2'),scoreW3:val('scoreW3'),scoreW4:val('scoreW4'),scoreW5:val('scoreW5'),stackHeightInch:val('stackHeightInch'),soNo:val('soNo'),orderQty:val('orderQty'),orderUnit:unit}
+}
 function createDatePayload(){return isAdmin()?dateISOToTH(val('createDateAdmin')):''}
 
 async function confirmCreate(){
@@ -713,7 +846,6 @@ if(!createDept)return popup('แจ้งเตือน','กรุณาเล
 if(type==='แผ่นงานลูกค้า'){
 if(!val('custName'))return popup('แจ้งเตือน','กรุณากรอกหรือเลือก Cust_Name');
 if(Number(val('orderQty')||0)<=0)return popup('แจ้งเตือน','กรุณากรอก ORDER');
-if(Number(val('weightBox')||0)<=0)return popup('แจ้งเตือน','กรุณากรอก Weight_Box');
 if(Number(val('weightSh')||0)<=0)return popup('แจ้งเตือน','กรุณากรอก Weight_Sh');
 }
 if(kgList.some(x=>x<=0))return popup('แจ้งเตือน','กรุณากรอกน้ำหนัก KG ให้ครบทุกพาเลท');
@@ -756,7 +888,7 @@ popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message);
 
 function clearCreateAfterSave(){
 setVal('createPalletCount',1);
-['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','weightSh','stackHeightInch','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));
+['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','weightSh','scoreW1','scoreW2','scoreW3','scoreW4','scoreW5','stackHeightInch','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));
 sheetPerInchInfo.classList.add('hidden');
 renderKgInputs()
 }
@@ -790,6 +922,17 @@ html,body{margin:0!important;padding:0!important;background:#fff;font-family:Ari
   table tr { page-break-inside: avoid; }
 }
 
+
+/* ===== SCORE GRID FIX ===== */
+.scoreGridFix{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+@media(max-width:900px){
+  .scoreGridFix{grid-template-columns:repeat(2,1fr);}
+}
+
 </style>`;
 }
 function printLabelBoxes(boxes){
@@ -799,7 +942,13 @@ const w=window.open('','_blank','width=900,height=700');
 if(!w){popup('แจ้งเตือน','Browser บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up ก่อนพิมพ์');return;}
 const pages=arr.map(x=>`<section class="labelPrintPage">${x.outerHTML}</section>`).join('');
 w.document.open();
-w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>Print Label</title>${getPrintCss()}</head><body>${pages}
+w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>Print Label</title>${getPrintCss()}
+<style>
+#board{width:100%;min-width:340px;}
+#flute{width:80px !important;}
+</style>
+
+</head><body>${pages}
 <script
 function formatChartLabel(text){
 if(!text) return '';
@@ -1061,37 +1210,40 @@ function customerStockTableRows(r){
 return getCustomerStockRows(r).map(x=>{
   const kg=num(x.remainingKG??x.remainingKg??x.kg??0);
   const wb=num(x.weightBox??x.Weight_Box??0);
-  const ws=num(
-x.weightSh ??
-x.weightSheet ??
-x.Weight_Sh ??
-x.Weight_SH ??
-x.WEIGHT_SH ??
-x.weight_sh ??
-0
-);
-  const boxRemain=wb>0?kg/wb:0;
+  const ws=num(x.weightSh??x.weightSheet??x.Weight_Sh??x.Weight_SH??x.WEIGHT_SH??x.weight_sh??0);
+  const orderUnit=String(x.orderUnit??x.OrderUnit??'').trim();
   const sheetRemain=ws>0?kg/ws:0;
+  const boxRemain=(orderUnit==='แผ่น')?sheetRemain:(wb>0?kg/wb:0);
   const wid=x.cutSheetWid??x.CutSheetWid??x.cutWid??'';
   const leng=x.cutSheetLeng??x.CutSheetLeng??x.cutLen??'';
   return [
     x.palletId||x.PalletID||'',
+    x.createDate||x.CreateDate||'',
     x.pc||x.PC||'',
     x.materialNo||x.Material_No||'',
     x.custName||x.Cust_Name||'',
     x.boxType||x.Box_Type||'',
+    wid,
+    leng,
     `${wid||'-'} x ${leng||'-'}`,
     x.flute||x.Flute||'',
     x.board||x.Board||'',
     fmt3(wb),
     fmt3(ws),
+    x.scoreW1??x.ScoreW1??'',
+    x.scoreW2??x.ScoreW2??'',
+    x.scoreW3??x.ScoreW3??'',
+    x.scoreW4??x.ScoreW4??'',
+    x.scoreW5??x.ScoreW5??'',
+    x.orderQty||x.OrderQty||'',
+    x.orderUnit||x.OrderUnit||'',
+    x.qtyPerPallet||x.QtyPerPallet||'',
     kg,
     Math.floor(boxRemain),
     Math.floor(sheetRemain),
     x.currentDept||x.CurrentDept||'',
     x.status||x.Status||'',
-    x.planOrderDate||x.PlanOrderDate||'',
-    x.planRemark||x.PlanRemark||x.remark||''
+    x.remark||x.Remark||''
   ];
 });
 }
@@ -1106,8 +1258,8 @@ if(typeof customerStockSection!=='undefined')customerStockSection.classList.togg
 reportTable.innerHTML=tblWithTotal(['ประเภท','สร้าง KG','ใช้ KG','WI KG','พาเลท','Balance'],(r.summary||[]).map(x=>[x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.pallet),num(x.balance)]),[1,2,3,4,5]);
 useDetailTable.innerHTML=tblWithTotal(['วันที่','PalletID','ประเภท','ใช้ KG','แผนก','ผู้ทำ','Remark'],(r.useSAP||[]).map(x=>[x.date,x.palletId,x.type,num(x.useKG),x.dept,x.user,x.remark||'']),[3]);
 wiTable.innerHTML=tblWithTotal(['PalletID','Type','KG','Dept','Status','Remark'],(r.wiRemain||[]).map(x=>[x.palletId,x.type,num(x.remainingKG),x.currentDept,x.status,x.remark||'']),[2]);
-traceTable.innerHTML=tblWithTotal(['RootID','Type','Create KG','Use KG','WI','Balance','Status','Remark'],(r.trace||[]).map(x=>[x.rootId,x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.balance),x.status,x.remark||'']),[2,3,4,5]);
-if(typeof customerStockTable!=='undefined')customerStockTable.innerHTML=tblWithTotal(['PalletID','PC','Material_No','Cust_Name','Box_Type','Size W x L','Flute','Board','Weight_Box','Weight_Sh','คงเหลือ KG','คงเหลือกล่อง','คงเหลือแผ่น','Dept','Status','วันที่คาดว่า Order เข้า','หมายเหตุวางแผน'],customerStockTableRows(r),[10,11,12]);
+traceTable.innerHTML=tblWithTotal(['RootID','Type','Create KG','Use KG','WI','Balance','Status','Remark'],(r.trace||[]).map(x=>[x.rootId||x.palletId||'',x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.balance),x.status,x.remark||'']),[2,3,4,5]);
+if(typeof customerStockTable!=='undefined')customerStockTable.innerHTML=tblWithTotal(['PalletID','วันที่สร้าง','PC','Material_No','Cust_Name','Box_Type','CutSheetWid','CutSheetLeng','Size W x L','Flute','Board','Weight_Box','Weight_Sh','ScoreW1','ScoreW2','ScoreW3','ScoreW4','ScoreW5','ORDER','หน่วย ORDER','จำนวนต่อพาเลท','คงเหลือ KG','คงเหลือกล่อง','คงเหลือแผ่น','Dept','Status','Remark'],customerStockTableRows(r),[21,22,23]);
 drawChart(r.summary||[])
 }
 function formatCell(c){return typeof c==='number'?nf(c):c}
@@ -1267,9 +1419,10 @@ if(typeof chartCanvas!=='undefined'){let ctx=chartCanvas.getContext('2d');ctx.cl
 }
 function clearReportForm(){setTodayDefaults();changeReportMode();clearReportScreen()}
 
-function clearCreateForm(){setVal('createPalletCount',1);['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','weightSh','stackHeightInch','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));sheetPerInchInfo.classList.add('hidden');renderKgInputs();labelPreview.innerHTML='';createPrintControl.classList.add('hidden')}
+function clearCreateForm(){setVal('createPalletCount',1);['pc','materialNo','custName','boxType','cutSheetWid','cutSheetLeng','flute','board','weightBox','weightSh','scoreW1','scoreW2','scoreW3','scoreW4','scoreW5','stackHeightInch','soNo','orderQty','createDept','createRemark'].forEach(id=>setVal(id,''));sheetPerInchInfo.classList.add('hidden');renderKgInputs();labelPreview.innerHTML='';createPrintControl.classList.add('hidden')}
 function clearIssueForm(){setVal('issueSearchKeyword','');setVal('issuePalletId','');setVal('issueNote','');setVal('issueToDept','');issueSearchResult.innerHTML='';issuePalletInfo.classList.add('hidden');msg('issueSearchMsg','');msg('issueMsg','')}
 function clearUseForm(){setVal('usePalletId','');setVal('remainKG','');labelPreviewUse.innerHTML='';usePalletInfo.classList.add('hidden');calcUseInfo.classList.add('hidden');currentUsePallet=null}
+function clearAdminForm(){['newType','newDept','fluteSetting'].forEach(id=>{if(document.getElementById(id))setVal(id,'')});if(document.getElementById('adminMsg'))msg('adminMsg','')}
 async function addType(){if(!await popup('ยืนยัน','ยืนยันเพิ่มประเภทงานใช่หรือไม่?',true))return;api({action:'addType',username:currentUser.username,value:val('newType')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok){setVal('newType','');loadSetup()}popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังเพิ่มประเภทงาน...')}
 async function deleteType(){if(!await popup('ยืนยัน','ยืนยันลบประเภทงานใช่หรือไม่?',true))return;api({action:'deleteType',username:currentUser.username,value:val('deleteTypeSelect')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok)loadSetup();popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังลบประเภทงาน...')}
 async function addDept(){if(!await popup('ยืนยัน','ยืนยันเพิ่มแผนกใช่หรือไม่?',true))return;api({action:'addDept',username:currentUser.username,value:val('newDept')},r=>{msg('adminMsg',r.message,r.ok?'ok':'danger');if(r.ok){setVal('newDept','');loadSetup()}popup(r.ok?'สำเร็จ':'ผิดพลาด',r.message)},'กำลังเพิ่มแผนก...')}
@@ -1300,7 +1453,7 @@ if(selected==='ALL'||selected==='SUMMARY')addStyledSheet(wb,'สรุปตา�
 if(selected==='ALL'||selected==='USE_SAP')addStyledSheet(wb,'รายงานใช้จริงเข้า SAP',['วันที่','PalletID','ประเภท','ใช้ KG','แผนก','ผู้ทำ','Remark'],(lastReportData.useSAP||[]).map(x=>[x.date,x.palletId,x.type,num(x.useKG),x.dept,x.user,x.remark||'']),[3]);
 if(selected==='ALL'||selected==='WI')addStyledSheet(wb,'WI คงเหลือ',['PalletID','Type','KG','Dept','Status','Remark'],(lastReportData.wiRemain||[]).map(x=>[x.palletId,x.type,num(x.remainingKG),x.currentDept,x.status,x.remark||'']),[2]);
 if(selected==='ALL'||selected==='TRACE')addStyledSheet(wb,'Trace Balance',['RootID','Type','Create KG','Use KG','WI','Balance','Status','Remark'],(lastReportData.trace||[]).map(x=>[x.rootId,x.type,num(x.createKG),num(x.useKG),num(x.wiKG),num(x.balance),x.status,x.remark||'']),[2,3,4,5]);
-if(selected==='ALL'||selected==='CUSTOMER_STOCK')addStyledSheet(wb,'Stock Matching ลูกค้า',['PalletID','PC','Material_No','Cust_Name','Box_Type','Size W x L','Flute','Board','Weight_Box','Weight_Sh','คงเหลือ KG','คงเหลือกล่อง','คงเหลือแผ่น','Dept','Status','วันที่คาดว่า Order เข้า','หมายเหตุวางแผน'],customerStockTableRows(lastReportData),[10,11,12]);
+if(selected==='ALL'||selected==='CUSTOMER_STOCK')addStyledSheet(wb,'Stock Matching ลูกค้า',['PalletID','วันที่สร้าง','PC','Material_No','Cust_Name','Box_Type','CutSheetWid','CutSheetLeng','Size W x L','Flute','Board','Weight_Box','Weight_Sh','ScoreW1','ScoreW2','ScoreW3','ScoreW4','ScoreW5','ORDER','หน่วย ORDER','จำนวนต่อพาเลท','คงเหลือ KG','คงเหลือกล่อง','คงเหลือแผ่น','Dept','Status','Remark'],customerStockTableRows(lastReportData),[21,22,23]);
 const name='EXCESS_SHEET_REPORT_'+todayTHDateTime().replace(/[/: ]/g,'-')+'.xlsx';
 XLSX.writeFile(wb,name);
 }
@@ -1340,6 +1493,61 @@ if(typeof ws[cellRef].v==='number')ws[cellRef].z='#,##0';
 }
 XLSX.utils.book_append_sheet(wb,ws,name.substring(0,31));
 }
+
+// ===== FIX WEIGHT SH ENGINE (BOX_AREA ONLY) =====
+
+
+function calcWeightShFixed(){
+  const w = Number(document.getElementById('cutSheetWid')?.value || 0);
+  const l = Number(document.getElementById('cutSheetLeng')?.value || 0);
+  const boardRaw = (document.getElementById('board')?.value || "");
+  const flute = (document.getElementById('flute')?.value || "").toUpperCase();
+  const orderUnit = document.getElementById('orderUnit')?.value || "";
+  const out = document.getElementById('weightSh');
+
+  if(!out) return;
+  if(orderUnit !== 'แผ่น'){ out.value=''; return; }
+  if(!w || !l){ out.value=''; return; }
+
+  // ✅ REMOVE METADATA (FSC etc.)
+  let board = boardRaw.replace(/FSC\//ig,'').replace(/\s+/g,'');
+
+  const area_m2 = (w*l)/1000000;
+  const parts = board.split('/').map(x=>parseFloat(x.replace(/[^0-9.]/g,''))||0);
+
+  const B = 1.322;
+  const C = 1.388;
+
+  let gsm = 0;
+
+  if(flute === 'BC' && parts.length >= 5){
+    gsm = parts[0] + (B*parts[1]) + parts[2] + (C*parts[3]) + parts[4];
+  } else if(flute === 'B'){
+    gsm = parts[0] + (B*(parts[1]||0)) + (parts[2]||0);
+  } else if(flute === 'C'){
+    gsm = parts[0] + (C*(parts[1]||0)) + (parts[2]||0);
+  } else {
+    gsm = parts.reduce((a,b)=>a+b,0);
+  }
+
+  let weight = (area_m2 * gsm)/1000;
+  weight = Math.round(weight*1000)/1000;
+
+  out.value = weight;
+
+  const box = document.getElementById('weightBox');
+  if(box && box.value){
+    const diff = Math.abs(Number(box.value)-weight);
+    out.style.border = diff>0.01 ? '2px solid #ef4444' : '2px solid #16a34a';
+  }
+}
+document.addEventListener('input', function(e){
+  const id = e.target?.id;
+  if(['cutSheetWid','cutSheetLeng','board','flute','orderUnit'].includes(id)){
+    calcWeightShFixed();
+  }
+});
+
 </script>
 </body>
 </html>
@@ -1375,35 +1583,66 @@ rows.forEach(r=>table.querySelector("tbody").appendChild(r));
 }
 
 
-function filterStockMatching(){
-  const f=(document.getElementById('sm_flute')?.value||'').toLowerCase();
-  const b=(document.getElementById('sm_board')?.value||'').toLowerCase();
-  const s=(document.getElementById('sm_size')?.value||'').toLowerCase();
-  const p=(document.getElementById('sm_pid')?.value||'').toLowerCase();
 
+function normalizeSmText(v){
+  return String(v||'').trim().toLowerCase().replace(/\s+/g,'');
+}
+function findSmColumn(headers, names){
+  const normHeaders=headers.map(h=>normalizeSmText(h));
+  for(const name of names){
+    const key=normalizeSmText(name);
+    let i=normHeaders.findIndex(h=>h===key);
+    if(i>=0) return i;
+    i=normHeaders.findIndex(h=>h.includes(key));
+    if(i>=0) return i;
+  }
+  return -1;
+}
+function filterStockMatching(){
+  const f={
+    pid:normalizeSmText(document.getElementById('sm_pid')?.value||''),
+    pc:normalizeSmText(document.getElementById('sm_pc')?.value||''),
+    material:normalizeSmText(document.getElementById('sm_material')?.value||''),
+    flute:normalizeSmText(document.getElementById('sm_flute')?.value||''),
+    board:normalizeSmText(document.getElementById('sm_board')?.value||''),
+    size:normalizeSmText(document.getElementById('sm_size')?.value||'')
+  };
   const table=document.querySelector('#customerStockTable table');
   if(!table) return;
-
+  const headers=[...table.querySelectorAll('thead th')].map(th=>th.innerText||'');
+  const idx={
+    pid:findSmColumn(headers,['Pallet ID','PalletID']),
+    pc:findSmColumn(headers,['PC']),
+    material:findSmColumn(headers,['Material_No','Material No','Material']),
+    flute:findSmColumn(headers,['Flute']),
+    board:findSmColumn(headers,['Board','Grade / Board','Grade']),
+    size:findSmColumn(headers,['Size W x L','Size'])
+  };
   const rows=[...table.querySelectorAll('tbody tr')];
-
   rows.forEach(r=>{
-    const t=r.innerText.toLowerCase();
-    const ok=
-      (!f || t.includes(f)) &&
-      (!b || t.includes(b)) &&
-      (!s || t.includes(s)) &&
-      (!p || t.includes(p));
-
-    r.style.display = ok ? '' : 'none';
+    const cells=[...r.children].map(td=>normalizeSmText(td.innerText||''));
+    const contains=(key)=>{
+      if(!f[key]) return true;
+      const i=idx[key];
+      if(i<0) return false;
+      return (cells[i]||'').includes(f[key]);
+    };
+    const exact=(key)=>{
+      if(!f[key]) return true;
+      const i=idx[key];
+      if(i<0) return false;
+      return (cells[i]||'')===f[key];
+    };
+    const ok=contains('pid') && contains('pc') && contains('material') && exact('flute') && contains('board') && contains('size');
+    r.style.display=ok?'':'none';
   });
 }
-
 function resetStockMatching(){
-  ['sm_flute','sm_board','sm_size','sm_pid'].forEach(id=>{
+  ['sm_pid','sm_pc','sm_material','sm_flute','sm_board','sm_size'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.value='';
   });
-  filterStockMatching();
+  const table=document.querySelector('#customerStockTable table');
+  if(table){[...table.querySelectorAll('tbody tr')].forEach(r=>r.style.display='');}
 }
-
 </script>
